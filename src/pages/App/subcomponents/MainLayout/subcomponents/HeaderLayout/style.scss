@@ -1,0 +1,25 @@
+// @import "../../../../../../assets/styles/variables";
+
+.header-container {
+    // height: 48px;
+    background: #ffffff;
+    padding: 0 25px !important;
+    border-left: 1px solid rgba(0, 0, 0, 0.05);
+    width: 100%;
+    box-shadow: 0 1px 4px #00152914;
+    .header-affix-container{
+        width: 100%;
+        .iconMenuContainer{
+            padding: 8px 4px;
+            .iconMenu{
+                border: none;
+                box-shadow: none;
+            }
+            .iconMenu:hover, .iconMenu:focus{
+                background-color: #CAF4FF;
+                color: #5AB2FF;
+                border: none;
+            }
+        }
+    }
+}

@@ -1,0 +1,65 @@
+.ant-popover-inner {
+    padding: 28px 30px !important;
+
+    .infor-container {
+        // height: 300px;
+        width: 300px;
+
+        .title-popover>.ant-typography {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            line-height: 21.6px;
+        }
+
+        .userNameText {
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 21px;
+        }
+
+        .account-container {
+            padding: 12px;
+            background-color: rgb(246, 249, 252);
+        }
+
+        .accInforText {
+            color: rgb(42, 53, 71);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .accSetText {
+            color: rgb(42, 53, 71);
+            font-size: 14px;
+        }
+
+        .logoutBn {
+            margin-top: 20px;
+            // width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 7px;
+            border: 1px solid rgb(93, 135, 255);
+            padding: 7px 16px;
+            cursor: pointer;
+
+            .logoffText {
+                font-size: 14px;
+                font-weight: 500;
+                line-height: 21px;
+                color: rgb(93, 135, 255);
+            }
+        }
+
+        .logoutBn:hover {
+            background-color: rgb(93, 135, 255);
+            color: #fff !important;
+
+            .logoffText {
+                color: #fff;
+            }
+        }
+    }
+}

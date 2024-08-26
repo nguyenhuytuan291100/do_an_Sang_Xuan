@@ -1,0 +1,35 @@
+.main-layout-container {
+    // height: 100vh;
+    overflow: hidden;
+
+    .layout-container {
+        height: 100vh;
+        // height: auto;
+        background: #F4F4F4;
+
+        .header-main-container{
+            box-shadow: 0 1px 4px #00152914;
+            margin-bottom: 1px;
+        }
+
+        .content-wrapper {
+            min-height: calc(100vh - 80px);
+            height: auto;
+            overflow-y: auto;
+            // background-color: antiquewhite;
+            // height: 10;
+        }
+
+        .text-footer {
+            font-family: 'Roboto';
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 500;
+            line-height: 20px;
+        }
+    }
+}
+
+.modal-error-login {
+    width: 500px !important;
+}
