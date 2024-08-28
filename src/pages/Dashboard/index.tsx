@@ -1,6 +1,6 @@
 import React from "react";
 
-const Detail = () => {
+const Dashboard = () => {
   return (
     <div className="dashboard-page page">
       <div className="page-header">Dashboard</div>
@@ -11,4 +11,4 @@ const Detail = () => {
   );
 };
 
-export default Detail;
+export default Dashboard;
