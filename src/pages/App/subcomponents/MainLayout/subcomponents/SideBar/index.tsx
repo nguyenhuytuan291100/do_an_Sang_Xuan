@@ -18,7 +18,7 @@ import clockPng from "assets/images/png/clock.png";
 import userPng from "assets/images/png/user.png";
 import trolleyPng from "assets/images/png/trolley.png";
 import cancelPng from "assets/images/png/cancel.png";
-import { HOME, DETAIL } from "pages/routes/route.constant";
+import { HOME, DASHBOARD } from "pages/routes/route.constant";
 import Icons from "assets/icons";
 
 type Props = {
@@ -55,8 +55,8 @@ const SideBar: React.FC<Props> = ({ collapsed, setCollapsed }) => {
           </Menu.Item>
           <Menu.Item key="2">
             <Icons.dashBoardTwoTone size={40} />
-            <Link className="menuText" to={DETAIL}>
-              Detail
+            <Link className="menuText" to={DASHBOARD}>
+              Dashboard
             </Link>
           </Menu.Item>
         </Menu>
