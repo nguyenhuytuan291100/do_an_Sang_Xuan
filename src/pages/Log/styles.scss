@@ -1,0 +1,36 @@
+.dashboard-page {
+    .page-header {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+  
+    .page-container {
+      .page-content {
+        .chart-row {
+          margin-top: 20px;
+  
+          .ant-col {
+            background: #f0f2f5;
+            padding: 10px;
+            border-radius: 4px;
+          }
+        }
+      }
+    }  
+    .custom-table {
+      .ant-table-thead > tr > th {
+        background-color: #f0f0f0;
+        cursor: pointer;
+        
+      }
+      // overflow-x: scroll;
+    }
+
+    .anomaly-row {
+      background-color: #ffcccc !important;
+    }
+     
+  }
+
+

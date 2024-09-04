@@ -1,0 +1,770 @@
+import React, { useState, useRef, useEffect, useLayoutEffect } from "react";
+import { Button, Col, Row,  Card,Tabs, Tooltip, Table, Input, Select } from "antd";
+
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
+import './styles.scss'; // Import file SCSS
+import { useParams } from "react-router-dom";
+import { getlogByID } from "services/apiService";
+import ResizableTitle from "pages/App/subcomponents/MainLayout/subcomponents/ResiableTitle";
+import { SearchOutlined, FilterOutlined } from '@ant-design/icons';
+import { title } from "process";
+
+
+const stackedbarchartdata = [
+  {
+    status_code: '200',
+    methods: [
+      { method: 'GET', count: 5000 },
+      { method: 'HEAD', count: 3000 },
+      { method: 'OPTIONS', count: 100 },
+      { method: 'POST', count: 200 },
+
+    ]
+  },
+  {
+    status_code: '404',
+    methods: [
+      { method: 'GET', count: 4000 },
+      { method: 'HEAD', count: 2000 },
+      { method: 'OPTIONS', count: 50 },
+      { method: 'POST', count: 100 },
+    ]
+  }
+];
+// Create an array to store unique methods
+const allMethods = Array.from(new Set(stackedbarchartdata.flatMap(entry => entry.methods.map(item => item.method))));
+
+const { TabPane } = Tabs;
+
+// Array to store colors for charts
+const COLORS = [
+  '#0088FE', // Bright Blue
+  '#00C49F', // Bright Green
+  '#FFBB28', // Bright Yellow
+  '#FF8042', // Bright Orange
+  '#FF6384', // Bright Pink
+  '#FF5733', // Bright Red
+  '#C70039', // Bright Magenta
+  '#36A2EB', // Light Blue
+  '#FFCE56', // Light Yellow
+  '#FFC300', // Bright Gold
+  '#DAF7A6', // Light Green
+  '#581845', // Deep Purple
+  '#900C3F', // Dark Pink
+  '#FF9FF3', // Light Pink
+  '#F368E0', // Bright Purple
+  '#00C851', // Bright Lime
+  '#007E33', // Dark Green
+  '#FF4444', // Bright Red
+  '#33b5e5', // Light Sky Blue
+  '#2BBBAD', // Bright Cyan
+];
+
+
+const Dashboard = () => {
+  const { id } = useParams();
+  const [viewType, setViewType] = useState("Map");
+  const [activeTabKey, setActiveTabKey] = useState('');
+
+  // State for storing data for each chart/table
+  const [log_type, setLogType] = useState('');
+  const [tableDatam1, setTableDatam1] = useState([]);
+  const [searchText, setSearchText] = useState('');
+  const [selectedField, setSelectedField] = useState('');
+
+  // M2
+  const [barChartDatam2, setBarChartDatam2] = useState([]);
+
+  // M3
+  const [lineChartDatam3, setLineChartDatam3] = useState([]);
+  //M4
+  const [barChartDatam4, setBarChartDatam4] = useState([]);
+  //M5
+  const [barChartDatam5, setBarChartDatam5] = useState([]);
+  //M6 Access
+  const [barChartDatam6Access, setBarChartDatam6Access] = useState([]);
+
+  const [barChartDatam7Access, setBarChartDatam7Acsess] = useState([]);
+  const [PieChartData8Access, setPieChartData8Access] = useState([]);
+  const [PieChartData9Access, setPieChartData9Access] = useState([]);
+  const [PieChartData10Access, setPieChartData10Access] = useState([]);
+
+  //M6 Audit
+  const [barChartDatam6Audit, setBarChartDatam6Audit] = useState([]);
+  const [barChartDatam7Audit, setBarChartDatam7Audit] = useState([]);
+  const [barChartDatam8Audit, setBarChartDatam8Audit] = useState([]);
+  const [PieChartData9Audit, setPieChartData9Audit] = useState([]);
+
+  const [totalE, setTotalEM4] = useState([]);
+  const [data, setColumns] = useState();
+
+  const dnsColumns = [
+    { title: 'Line ID', dataIndex: 'LineId', key: 'lineId', width: 80 },
+    { title: 'Timestamp', dataIndex: 'Timestamp', key: 'timestamp', width: 150 },
+    { title: 'Process', dataIndex: 'Process', key: 'process', width: 120 },
+    { title: 'Content', dataIndex: 'Content', key: 'content', width: 200 },
+    { title: 'Event Template', dataIndex: 'EventTemplate', key: 'eventTemplate', width: 180 },
+    { title: 'Label', dataIndex: 'Anomaly', key: 'label', width: 100 },
+  ];
+
+  const auditColumns = [
+    { title: 'Line ID', dataIndex: 'LineId', key: 'lineId', width: 80 },
+    { title: 'Type', dataIndex: 'Type', key: 'type', width: 100 },
+    { title: 'Timestamp', dataIndex: 'Timestamp', key: 'timestamp', width: 150 },
+    { title: 'Process ID', dataIndex: 'pid', key: 'pid', width: 100 },
+    { title: 'User ID', dataIndex: 'uid', key: 'uid', width: 100 },
+    { title: 'Session ID', dataIndex: 'ses', key: 'ses', width: 100 },
+    { title: 'Message', dataIndex: 'msg', key: 'msg', width: 300 },
+    { title: 'Account', dataIndex: 'acct', key: 'acct', width: 150 },
+    { title: 'Executable', dataIndex: 'exe', key: 'exe', width: 200 },
+    { title: 'Hostname', dataIndex: 'hostname', key: 'hostname', width: 150 },
+    { title: 'IP Address', dataIndex: 'addr', key: 'addr', width: 150 },
+    { title: 'Terminal', dataIndex: 'terminal', key: 'terminal', width: 100 },
+    { title: 'Result', dataIndex: 'res', key: 'res', width: 100 },
+    { title: 'Event Classification', dataIndex: 'Event_Classification', key: 'eventClassification', width: 200 },
+    { title: 'Label', dataIndex: 'Anomaly', key: 'label', width: 100 },
+  ];
+
+  const accessColumns = [
+    { title: 'Line ID', dataIndex: 'LineId', key: 'lineId', width: 80 },
+    { title: 'Client IP', dataIndex: 'Client_IP', key: 'clientIp', width: 150 },
+    { title: 'Timestamp', dataIndex: 'Timestamp', key: 'timestamp', width: 150 },
+    { title: 'Status Code', dataIndex: 'Status_Code', key: 'statusCode', width: 100 },
+    { title: 'Response Bytes', dataIndex: 'Response_Bytes', key: 'responseBytes', width: 150 },
+    { title: 'Refer', dataIndex: 'Refer', key: 'refer', width: 150 },
+    { title: 'Method', dataIndex: 'Method', key: 'method', width: 100 },
+    { title: 'Path', dataIndex: 'Path', key: 'path', width: 200 },
+    { title: 'Version', dataIndex: 'Version', key: 'version', width: 100 },
+    { title: 'User Agent', dataIndex: 'User_Agent', key: 'userAgent', width: 200 },
+    { title: 'Label', dataIndex: 'Anomaly', key: 'label', width: 100 },
+  ];
+
+
+
+  let columns: typeof dnsColumns | typeof auditColumns | typeof accessColumns | [] | undefined;
+
+  if (log_type === 'dns') {
+    columns = dnsColumns;
+
+  } else if (log_type === 'audit') {
+    columns = auditColumns;
+
+  } else if (log_type === 'access') {
+    columns = accessColumns;
+
+  }
+ 
+  // useEffect(() => {
+  //   // Cập nhật columns dựa trên log_type
+  //   if (log_type === 'dns') {
+  //     setColumns(dnsColumns);
+  //   } else if (log_type === 'audit') {
+  //     setColumns(auditColumns);
+  //   } else if (log_type === 'access') {
+  //     setColumns(accessColumns);
+  //   }
+  // }, [log_type]);
+  // Handle search input
+  const handleSearch = (e: any) => {
+    setSearchText(e.target.value);
+  };
+
+  const handleFieldChange = (value: any) => {
+    setSelectedField(value);
+  };
+
+ 
+  const filteredData = tableDatam1.filter((item) => {
+    if (!selectedField || selectedField === "All Fields") {
+      return Object.values(item).some((val) => {
+        if (val !== undefined && val !== null) {
+          const valueStr = typeof val === 'string' || typeof val === 'number' ? String(val) : '';
+          return valueStr.toLowerCase().includes(searchText.toLowerCase());
+        }
+        return false;
+      });
+    } else {
+      const selectedValue = item[selectedField];
+      if (selectedValue !== undefined && selectedValue !== null) {
+        const valueStr = typeof selectedValue === 'string' || typeof selectedValue === 'number' ? String(selectedValue) : '';
+        return valueStr.toLowerCase().includes(searchText.toLowerCase());
+      }
+      return false;
+    }
+  });
+
+  const toggleViewType = () => {
+    setViewType((prevType) => (prevType === "Map" ? "Table" : "Map"));
+  };
+ 
+
+  const handleTabChange = (key: string) => {
+    setActiveTabKey(key);
+  };
+
+  useLayoutEffect(() => {
+    getlogByID(id).then( async (res) =>{
+      await setLogType(res['typeLog']);//ok
+      setTableDatam1(res['m1']);//ok
+      // Process network data
+      setBarChartDatam2(res['m2'])
+      setLineChartDatam3(res['m3'])//ok
+      setTotalEM4(res['m4']);
+      setBarChartDatam4(res['m4']);
+      setBarChartDatam5(res['m5']);
+      //Audit
+      setBarChartDatam6Audit(res['m6']);
+      setBarChartDatam7Audit(res['m7']);
+      setBarChartDatam8Audit(res['m8']);
+      setPieChartData9Audit(res['m9']);
+      //Access
+      setBarChartDatam6Access(res['m6'])
+      setBarChartDatam7Acsess(res['m7']);
+      setPieChartData8Access(res['m8']);
+      setPieChartData10Access(res['m10']);
+      setPieChartData9Access(res['m9']);
+      // setColumns()
+
+      // const parsedData = res['m8'];
+      // setDatam8Maxsize(parsedData.max_packet_size);
+      // setDatam8Minsize(parsedData.min_packet_size);
+      // setDatam8Meansize(parsedData.mean_packet_size);
+      // setDatam8SumIP(parsedData.total_unique_ips);
+      // setDatam8Src(parsedData.unique_source_ips);
+      // setDatam8Dst(parsedData.unique_destination_ips);
+
+    }).catch((error) => {
+      console.error("Error fetching log data:", error);
+    });
+  }, [id]);
+
+  useEffect(() => {
+    if (log_type === 'dns') {
+      setActiveTabKey('1');
+    } else if (log_type === 'audit') {
+      setActiveTabKey('2');
+    } else if (log_type === 'access') {
+      setActiveTabKey('3');
+    } else if (log_type === 'undefined') {
+      setActiveTabKey('4');
+    }
+  }, [log_type]);
+
+  return (
+    <div className="dashboard-page page">
+      <div className="page-header">Dashboard</div>
+      <div className="page-container">
+        <div className="page-content">
+          <Row justify={"space-between"} align="middle">
+            <Col>
+              <Button onClick={toggleViewType}>
+                {viewType === "Map" ? "Switch to Table" : "Switch to Map"}
+              </Button>
+            </Col>
+            {viewType === "Map" && (
+              <Col span={16}>
+                <Tabs activeKey={activeTabKey} onChange={handleTabChange} centered >
+                  <TabPane 
+                    tab="DNS Log" 
+                    key="1" 
+                    disabled={log_type !== ('dns')} 
+                    active={log_type === ('dns')}
+                  />
+                  <TabPane 
+                    tab="Audit Log" 
+                    key="2" 
+                    disabled={log_type !== ('audit')} 
+                    active={log_type === ('audit')}
+                  />
+                  <TabPane 
+                    tab="Apache Log" 
+                    key="3" 
+                    disabled={log_type !== ('access')}
+                    active={log_type === ('access')}
+                  />
+                  <TabPane 
+                    tab="Undefined" 
+                    key="4" 
+                    disabled={log_type !== ('undefined')} 
+                  />
+                </Tabs>
+              </Col>
+            )}
+          </Row>
+          {viewType === "Map" && (
+            <div>
+              {activeTabKey === "1" && (
+                <div>
+                  <Row gutter={[24, 24]} className="chart-row">
+                    <h2>M1DNS</h2>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={barChartDatam2}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <RechartsTooltip />
+                          <Legend />
+                          {/* <Bar dataKey="uv" fill="#8884d8" />  */}
+                          <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'top' }}>
+                            {barChartDatam2?.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </Row>
+                    <Row gutter={[40, 40]} className="chart-row">
+                    <Col span={23}>
+                      <h4>DNS/M2</h4>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={lineChartDatam3}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <RechartsTooltip />
+                          <Legend />
+                          <Line type="monotone" dataKey="pv" stroke="#8884d8" />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </Col>
+                  </Row>
+                  <Row gutter={[20, 20]} className="chart-row">
+                    <Col span={12}>                
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={barChartDatam4}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <RechartsTooltip />
+                          <Legend />
+                          <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'top' }}>
+                            {barChartDatam4?.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </Col>
+                    <Col span={12}>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={barChartDatam5}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <RechartsTooltip />
+                          <Legend />
+                          <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'top' }}>
+                            {barChartDatam5?.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </Col>
+                  </Row>               
+                </div>
+              )}
+              {activeTabKey === "2" && (
+                <div>
+                <Row gutter={[24, 24]} className="chart-row">
+                  <h2>M1audit</h2>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={barChartDatam2}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="EventTemplate" />
+                        <YAxis />
+                        <RechartsTooltip />
+                        <Legend />
+                        {/* <Bar dataKey="Occurrences" fill="#8884d8" /> */}
+                        <Bar dataKey="Occurrences"  fill="#8884d8" label={{ position: 'top' }}>
+                            {barChartDatam2?.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
+                            ))}
+                          </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </Row>
+                  <Row gutter={[40, 40]} className="chart-row">
+                  <Col span={23}>
+                    <h4>m2audit</h4>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={lineChartDatam3}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <RechartsTooltip />
+                        <Legend />
+                        <Line type="monotone" dataKey="pv" stroke="#8884d8" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </Col>
+                </Row>
+                <Row gutter={[20, 20]} className="chart-row">
+                  <Col span={12}>  
+                  <h2>m3.1audit</h2>              
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={barChartDatam4}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <RechartsTooltip />
+                        <Legend />
+                        <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'top' }}>
+                            {barChartDatam4?.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
+                            ))}
+                          </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>            
+                  </Col>
+                  <Col span={12}>
+                  <h2>m3.2</h2>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={barChartDatam5}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <RechartsTooltip />
+                        <Legend />
+                        <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'top' }}>
+                            {barChartDatam5?.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
+                            ))}
+                          </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </Col>
+                </Row>
+                <Row gutter={[20, 20]} className="chart-row">
+                  <Col span={12}>  
+                  <h2>m3.3audit</h2>              
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={barChartDatam6Audit}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <RechartsTooltip />
+                        <Legend />
+                        <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'top' }}>
+                            {barChartDatam6Audit?.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
+                            ))}
+                          </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>            
+                  </Col>
+                  <Col span={12}>
+                  <h2>m3.4</h2>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={barChartDatam7Audit}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <RechartsTooltip />
+                        <Legend />
+                        <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'top' }}>
+                            {barChartDatam7Audit?.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
+                            ))}
+                          </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </Col>
+                </Row>
+                <Row gutter={[20, 20]} className="chart-row">
+                  <Col span={12}>  
+                  <h2>m3.5audit</h2>              
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={barChartDatam8Audit}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <RechartsTooltip />
+                        <Legend />
+                        <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'top' }}>
+                            {barChartDatam8Audit?.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
+                            ))}
+                          </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>            
+                  </Col>
+                  <Col span={12}>
+                  <h2>m5audit</h2>
+                    <ResponsiveContainer width="100%" height={300}>
+                        <PieChart>
+                          <Pie
+                            data={PieChartData9Audit}
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                            label
+                          >
+                            {PieChartData9Audit?.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <RechartsTooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                  </Col>
+                </Row>               
+              </div>
+              )}
+              {activeTabKey === "3" && (
+                <div>
+                  <Row gutter={[24, 24]} className="chart-row">
+                  <h2>M1access</h2>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={barChartDatam2}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="EventTemplate" />
+                        <YAxis />
+                        <RechartsTooltip />
+                        <Legend />
+                       
+                        <Bar dataKey="Occurrences"  fill="#8884d8" label={{ position: 'top' }}>
+                            {barChartDatam2?.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
+                            ))}
+                          </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </Row>
+                  <Row gutter={[40, 40]} className="chart-row">
+                  <Col span={23}>
+                    <h4>m2access</h4>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={lineChartDatam3}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <RechartsTooltip />
+                        <Legend />
+                        <Line type="monotone" dataKey="pv" stroke="#8884d8" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </Col>
+                </Row>
+                <Row gutter={[20, 20]} className="chart-row">
+                  <Col span={12}>  
+                  <h2>m3access</h2>              
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={barChartDatam4}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <RechartsTooltip />
+                        <Legend />
+                        {/* <Bar dataKey="count" fill="#8884d8" /> */}
+                        <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'top' }}>
+                            {barChartDatam4?.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
+                            ))}
+                          </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>            
+                  </Col>
+                  <Col span={12}>
+                  <h2>m4access</h2>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={barChartDatam5}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <RechartsTooltip />
+                        <Legend />
+                        <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'top' }}>
+                            {barChartDatam5?.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
+                            ))}
+                          </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </Col>
+                </Row>
+                <Row gutter={[20, 20]} className="chart-row">
+                <Col span={12}>  
+                  <h2>m5access</h2>              
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={barChartDatam6Access}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="status_code" />
+                      <YAxis />
+                      <RechartsTooltip />
+                      <Legend />
+                      {allMethods?.map((method, index) => (
+                        <Bar key={method} dataKey={method} stackId="a" fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </BarChart>
+                  </ResponsiveContainer>               
+                </Col>
+                <Col span={12}>
+                  <h2>m6access</h2>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', marginTop: '20px' }}>
+                    <thead>
+                      <tr>
+                        <th style={{ border: '1px solid black', padding: '8px' }}>Name</th>
+                        <th style={{ border: '1px solid black', padding: '8px' }}>UV</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {barChartDatam7Access?.map((item, index) => (
+                        <tr key={index}>
+                          <td style={{ border: '1px solid black', padding: '8px' }}>{item['name']}</td>
+                          <td style={{ border: '1px solid black', padding: '8px' }}>{item['uv']}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </Col>
+                </Row>
+                <Row gutter={[20, 20]} className="chart-row">
+                  <Col span={8}>  
+                  <h2>m7access</h2>              
+                  <ResponsiveContainer width="100%" height={300}>
+                        <PieChart>
+                          <Pie
+                            data={PieChartData8Access}
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                            label
+                          >
+                            {PieChartData8Access?.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <RechartsTooltip />
+                        </PieChart>
+                      </ResponsiveContainer>           
+                  </Col>
+                  <Col span={8}>
+                  <h2>m8access</h2>
+                  <ResponsiveContainer width="100%" height={300}>
+                        <PieChart>
+                          <Pie
+                            data={PieChartData9Access}
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                            label
+                          >
+                            {PieChartData9Access?.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <RechartsTooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                  </Col>
+                  <Col span={8}>
+                  <h2>m9access</h2>
+                  <ResponsiveContainer width="100%" height={300}>
+                        <PieChart>
+                          <Pie
+                            data={PieChartData10Access}
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                            label
+                          >
+                            {PieChartData10Access?.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <RechartsTooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                  </Col>
+                </Row>
+                </div>
+              )}
+              </div>
+            )}
+  
+
+          {viewType === "Table" && (
+            <div>
+              <h2>
+                {log_type === 'dns' ? 'DNS Log' :
+                log_type === 'audit' ? 'Audit Log' :
+                log_type === 'access' ? 'Access Log' : 'Select Log Type'} Table
+              </h2>
+
+              <Row gutter={[24, 24]} style={{ marginBottom: '20px' }}>
+                <Col span={14}>
+                  <Input 
+                    placeholder="Search..." 
+                    value={searchText} 
+                    onChange={handleSearch} 
+                    prefix={<SearchOutlined />} 
+                    style={{ width: '100%' }} 
+                  />
+                </Col>
+                <Col span={10} style={{ textAlign: 'right' }}>
+                  <Select
+                    suffixIcon={<FilterOutlined />}
+                    style={{ width: '25%', marginRight: '8px' }}
+                    placeholder="Select a field"
+                    onChange={handleFieldChange}
+                    allowClear
+                  >
+                    <Select.Option value="">All Fields</Select.Option>
+                    
+                    {columns?.map((col) => (
+                      <Select.Option key={col.dataIndex} value={col.dataIndex}>
+                        {col.title}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                  <Button 
+                    type="primary" 
+                    icon={<SearchOutlined />} 
+                    onClick={handleSearch}
+                  >
+                    Tìm kiếm
+                  </Button>
+                </Col>
+              </Row>
+              <Table
+                bordered
+                dataSource={filteredData.map((item: any) => ({
+                  ...item,
+                  rowClassName: item.label === 'Anomaly' ? 'anomaly-row' : '',
+                }))}
+                columns={columns}
+                pagination={{
+                  pageSize: 10,
+                  showSizeChanger: false,
+                  position: ['bottomRight'],
+                  prevIcon: <Button>«</Button>,
+                  nextIcon: <Button>»</Button>,
+                }}
+                scroll={{x:1000}}
+                components={{
+                  header: {
+                    cell: ResizableTitle,
+                  },
+                }}
+                rowClassName={(record) => (record.Anomaly === 'Anomaly' ? 'anomaly-row' : '')}
+                className="custom-table"
+              />
+              </div>
+              
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;
