@@ -87,7 +87,6 @@ const SideBar: React.FC<Props> = ({ collapsed, setCollapsed }) => {
         return [...prevFiles, fileName];
       }else{ return prevFiles;}
       
-      
     });
 
     console.log("Uploading:", fileName);
@@ -110,10 +109,7 @@ const SideBar: React.FC<Props> = ({ collapsed, setCollapsed }) => {
     
   };
 
-  const handleRemoveFile = (fileName: string, setFiles: React.Dispatch<React.SetStateAction<string[]>>) => {
-    setFiles((prevFiles) => prevFiles.filter((file) => file !== fileName));
-  };
-
+  
   const logUploadProps = {
     showUploadList: false,
     customRequest: (options: UploadRequestOption) => handleUploadLog(options, setLogFiles),

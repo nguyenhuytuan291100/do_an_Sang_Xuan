@@ -1,14 +1,18 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from "react";
-import { Button, Col, Row,  Card,Tabs, Tooltip, Table, Input, Select } from "antd";
+import { Button, Col, Row,  Card,Tabs, Tooltip, Table, Input, Select , List,Menu } from "antd";
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Label} from "recharts";
 import './styles.scss'; // Import file SCSS
 import { useParams } from "react-router-dom";
 import { getlogByID } from "services/apiService";
 import ResizableTitle from "pages/App/subcomponents/MainLayout/subcomponents/ResiableTitle";
 import { SearchOutlined, FilterOutlined } from '@ant-design/icons';
-import { title } from "process";
 
+
+
+import { Modal } from 'antd';
+import { useNavigate } from 'react-router-dom';
+import { gettraffic, gettrafficById} from '../../services/apiService';
 
 const stackedbarchartdata = [
   {
@@ -62,6 +66,7 @@ const COLORS = [
 
 
 const Dashboard = () => {
+  //log
   const { id } = useParams();
   const [viewType, setViewType] = useState("Map");
   const [activeTabKey, setActiveTabKey] = useState('');
@@ -139,8 +144,6 @@ const Dashboard = () => {
     { title: 'Label', dataIndex: 'Anomaly', key: 'label', width: 100 },
   ];
 
-
-
   let columns: typeof dnsColumns | typeof auditColumns | typeof accessColumns | [] | undefined;
 
   if (log_type === 'dns') {
@@ -154,16 +157,6 @@ const Dashboard = () => {
 
   }
  
-  // useEffect(() => {
-  //   // Cập nhật columns dựa trên log_type
-  //   if (log_type === 'dns') {
-  //     setColumns(dnsColumns);
-  //   } else if (log_type === 'audit') {
-  //     setColumns(auditColumns);
-  //   } else if (log_type === 'access') {
-  //     setColumns(accessColumns);
-  //   }
-  // }, [log_type]);
   // Handle search input
   const handleSearch = (e: any) => {
     setSearchText(e.target.value);
@@ -197,7 +190,6 @@ const Dashboard = () => {
     setViewType((prevType) => (prevType === "Map" ? "Table" : "Map"));
   };
  
-
   const handleTabChange = (key: string) => {
     setActiveTabKey(key);
   };
@@ -223,15 +215,7 @@ const Dashboard = () => {
       setPieChartData8Access(res['m8']);
       setPieChartData10Access(res['m10']);
       setPieChartData9Access(res['m9']);
-      // setColumns()
-
-      // const parsedData = res['m8'];
-      // setDatam8Maxsize(parsedData.max_packet_size);
-      // setDatam8Minsize(parsedData.min_packet_size);
-      // setDatam8Meansize(parsedData.mean_packet_size);
-      // setDatam8SumIP(parsedData.total_unique_ips);
-      // setDatam8Src(parsedData.unique_source_ips);
-      // setDatam8Dst(parsedData.unique_destination_ips);
+ 
 
     }).catch((error) => {
       console.error("Error fetching log data:", error);
@@ -249,6 +233,132 @@ const Dashboard = () => {
       setActiveTabKey('4');
     }
   }, [log_type]);
+
+
+  //link traffic
+  interface LogRecord {
+    Timestamp: string; // hoặc Date, tùy vào định dạng
+    id: string; // nếu có thêm id hoặc các thuộc tính khác
+    [key: string]: any;
+  }
+
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isModalVisible1, setIsModalVisible1] = useState(false);
+  const [selectedLogRecord, setSelectedLogRecord] = useState<LogRecord | null>(null);
+  const [trafficFiles, setTrafficFiles] = useState<string[]>([]);  // Trạng thái để lưu trữ các tệp đã tải lên cho Traffic
+  const [trafficData, setTrafficData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  //LINK TRAFFIC FUNCTION
+  useEffect(() => {
+    gettraffic().then((res) => {
+      console.log(res); // Kiểm tra cấu trúc dữ liệu trả về
+      setTrafficFiles(res);
+    });
+  }, []);
+
+  const showModal = (recordLog:any)=> {
+    setSelectedLogRecord(recordLog);
+    setIsModalVisible(true);
+    showModal1(false)
+  };
+  const showModal1 = async (state:any) => {
+    setIsModalVisible1(state);
+  };
+
+  const handleOnClickTraffic = async (trafficid: any)=>{
+    handleTrafficFileSelect(trafficid)
+
+  }
+  const convertLogTimestampToComparableFormat = (timestamp: string) => {
+    if (timestamp.includes('/')) {
+      // Định dạng 'YYYY/MM/DD HH:MM:SS' thành 'YYYY-MM-DDTHH:MM:SS'
+      return timestamp.replace(/\//g, '-').replace(' ', 'T');
+    } 
+    return timestamp;
+  };
+  
+  const compareTimestamps = (logTimestamp: string, trafficTimestamp: string) => {
+    // Nếu là timestamp dạng milliseconds, chuyển nó thành dạng 'YYYY-MM-DDTHH:MM:SS'
+    if (!isNaN(Number(logTimestamp))) {
+      const logDate = new Date(Number(logTimestamp));
+      const formattedLogTimestamp = logDate.toISOString().slice(0, 19); // Lấy dạng 'YYYY-MM-DDTHH:MM:SS'
+      return formattedLogTimestamp === trafficTimestamp.replace(' ', 'T');
+    } 
+    
+    // Chuyển đổi timestamp log sang định dạng có thể so sánh được
+    const formattedLogTimestamp = convertLogTimestampToComparableFormat(logTimestamp);
+    
+    // So sánh dạng chuẩn
+    return formattedLogTimestamp === trafficTimestamp.replace(' ', 'T');
+  };
+  
+  const handleTrafficFileSelect = async (trafficFile: any) => {
+      console.log(trafficFile);
+      const trafficDataSet = await gettrafficById(trafficFile); // Lấy dữ liệu traffic theo ID
+      console.log(trafficDataSet)
+      console.log(selectedLogRecord)
+      setLoading(true); // Bắt đầu loading
+    
+      try {
+        if (selectedLogRecord) {
+          console.log(selectedLogRecord.Timestamp);
+          showModal1(true);
+          setTrafficData(trafficDataSet['m1'])
+          // Sử dụng hàm so sánh
+          const filteredTrafficData = trafficData.filter((item: any) => 
+            compareTimestamps(selectedLogRecord.Timestamp, item.Timestamp)
+          ); // Lọc theo Timestamp
+  
+          setTrafficData(filteredTrafficData); // Lưu dữ liệu đã lọc
+        }
+      } catch (error) {
+        console.error("Error fetching traffic data:", error);
+      } finally {
+        setLoading(false); // Tắt loading
+      }
+    };
+
+
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+    setTrafficData([]); 
+  };
+  const handleCancel1 = () => {
+    setIsModalVisible1(false);
+    setTrafficData([]); 
+  };
+  const TrafficColumns=[
+    { title: 'Flow ID', dataIndex: 'Flow ID', key: 'flowID', width: 100 },
+    { title: 'Timestamp', dataIndex: 'Timestamp', key: 'timestamp', width: 150 },
+    { title: 'Source IP', dataIndex: 'Source IP', key: 'srcIP', width: 80 },
+    { title: 'Destination IP', dataIndex: 'Destination IP', key: 'dstIP', width: 150 },
+    { title: 'Source Port', dataIndex: 'Source Port', key: 'srcPort', width: 100 },
+    { title: 'Destination Port', dataIndex: 'Destination Port', key: 'dstPort', width: 100 },
+    { title: 'Protocol', dataIndex: 'Protocol', key: 'protocol', width: 100 },
+    { title: 'Application Protocol', dataIndex: 'Application Protocol', key: 'appProtocol', width: 150 },
+    { title: 'Time_Delta', dataIndex: 'Time_Delta', key: 'timeDelta', width: 100 },
+    { title: 'Totlen Pkts', dataIndex: 'Totlen Pkts', key: 'totLenPkts', width: 100 },
+    { title: 'Tot Fwd Pkts', dataIndex: 'Tot Fwd Pkts', key: 'totFwdPkts', width: 100 },
+    { title: 'Tot Bwd Pkts', dataIndex: 'Tot Bwd Pkts', key: 'totBwdPkts', width: 100 },
+    { title: 'TotLen Fwd Pkts', dataIndex: 'TotLen Fwd Pkts', key: 'totLenFwdPkts', width: 150 },
+    { title: 'TotLen Bwd Pkts', dataIndex: 'TotLen Bwd Pkts', key: 'totLenBwdPkts', width: 150 },
+    { title: 'Tot Pkts', dataIndex: 'Tot Pkts', key: 'totPkts', width: 100 },
+    { title: 'Label', dataIndex: 'Label', key: 'labl', width: 80 },]
+
+
+  const actionColumn = {
+    title: 'Hành động',
+    key: 'action',
+    width: 150,
+    render: (text: any, record: LogRecord) => (
+      <Button type="primary" onClick={() => showModal(record)}>
+        Tìm kiếm Traffic
+      </Button>
+    ),
+  };
+
+  const columnsWithButton = Array.isArray(columns) ? [...columns, actionColumn] : [actionColumn];
 
   return (
     <div className="dashboard-page page">
@@ -296,15 +406,14 @@ const Dashboard = () => {
               {activeTabKey === "1" && (
                 <div>
                   <Row gutter={[24, 24]} className="chart-row">
-                    <h2>M1DNS</h2>
+                    <h2>DNS Event</h2>
                       <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={barChartDatam2}>
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="name" />
-                          <YAxis />
+                          <YAxis><Label value="Number of Events" angle={-90} position="insideLeft" /></YAxis>
                           <RechartsTooltip />
-                          <Legend />
-                          {/* <Bar dataKey="uv" fill="#8884d8" />  */}
+                          <Legend formatter={() => 'Event Type'}/>
                           <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'top' }}>
                             {barChartDatam2?.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
@@ -314,30 +423,31 @@ const Dashboard = () => {
                       </ResponsiveContainer>
                     </Row>
                     <Row gutter={[40, 40]} className="chart-row">
-                    <Col span={23}>
-                      <h4>DNS/M2</h4>
+                    <Col span={24}>
+                      <h2>Total Number of DNS Events per Day/Hour</h2>
                       <ResponsiveContainer width="100%" height={300}>
                         <LineChart data={lineChartDatam3}>
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="name" />
-                          <YAxis />
+                          <YAxis><Label value="Number of Events" angle={-90} position="insideLeft" /></YAxis>
                           <RechartsTooltip />
-                          <Legend />
+                          <Legend formatter={() => 'Time'}/>
                           <Line type="monotone" dataKey="pv" stroke="#8884d8" />
                         </LineChart>
                       </ResponsiveContainer>
                     </Col>
                   </Row>
                   <Row gutter={[20, 20]} className="chart-row">
-                    <Col span={12}>                
+                    <Col span={12}>  
+                    <h2>Top 10 Source IPs by Number of DNS Events</h2>              
                       <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={barChartDatam4}>
                           <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
-                          <YAxis />
+                          <XAxis dataKey="name" ></XAxis>
+                          <YAxis ><Label value="Number of Events" angle={-90} position="insideLeft" /></YAxis>
                           <RechartsTooltip />
-                          <Legend />
-                          <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'top' }}>
+                          <Legend formatter={() => 'Source IPs'} />
+                          <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'top' }} >
                             {barChartDatam4?.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
                             ))}
@@ -346,13 +456,14 @@ const Dashboard = () => {
                       </ResponsiveContainer>
                     </Col>
                     <Col span={12}>
+                    <h2>Distribution of DNS Query Type</h2>
                       <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={barChartDatam5}>
                           <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
-                          <YAxis />
+                          <XAxis dataKey="name"></XAxis>
+                          <YAxis><Label value="Number of Queries" angle={-90} position="insideLeft" /></YAxis>
                           <RechartsTooltip />
-                          <Legend />
+                          <Legend formatter={() => 'Query Type'} />
                           <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'top' }}>
                             {barChartDatam5?.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
@@ -367,15 +478,14 @@ const Dashboard = () => {
               {activeTabKey === "2" && (
                 <div>
                 <Row gutter={[24, 24]} className="chart-row">
-                  <h2>M1audit</h2>
+                  <h2>Event Template</h2>
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={barChartDatam2}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="EventTemplate" />
-                        <YAxis />
+                        <YAxis><Label value="Number" angle={-90} position="insideLeft" /></YAxis>
                         <RechartsTooltip />
-                        <Legend />
-                        {/* <Bar dataKey="Occurrences" fill="#8884d8" /> */}
+                        <Legend formatter={() => 'Event Template'}/>
                         <Bar dataKey="Occurrences"  fill="#8884d8" label={{ position: 'top' }}>
                             {barChartDatam2?.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
@@ -386,14 +496,14 @@ const Dashboard = () => {
                   </Row>
                   <Row gutter={[40, 40]} className="chart-row">
                   <Col span={23}>
-                    <h4>m2audit</h4>
+                    <h2>Event Per Day</h2>
                     <ResponsiveContainer width="100%" height={300}>
                       <LineChart data={lineChartDatam3}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
-                        <YAxis />
+                        <YAxis><Label value="Number" angle={-90} position="insideLeft" /></YAxis>
                         <RechartsTooltip />
-                        <Legend />
+                        <Legend formatter={() => 'Time'}/>
                         <Line type="monotone" dataKey="pv" stroke="#8884d8" />
                       </LineChart>
                     </ResponsiveContainer>
@@ -406,9 +516,9 @@ const Dashboard = () => {
                       <BarChart data={barChartDatam4}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
-                        <YAxis />
+                        <YAxis><Label value="Number" angle={-90} position="insideLeft" /></YAxis>
                         <RechartsTooltip />
-                        <Legend />
+                        <Legend formatter={() => 'Event Type'}/>
                         <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'top' }}>
                             {barChartDatam4?.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
@@ -741,7 +851,7 @@ const Dashboard = () => {
                   ...item,
                   rowClassName: item.label === 'Anomaly' ? 'anomaly-row' : '',
                 }))}
-                columns={columns}
+                columns={columnsWithButton}
                 pagination={{
                   pageSize: 10,
                   showSizeChanger: false,
@@ -761,6 +871,52 @@ const Dashboard = () => {
               </div>
               
           )}
+          {/* Modal hiển thị danh sách file traffic */}
+      <Modal
+        title="Chọn file Traffic"
+        visible={isModalVisible}
+        onCancel={handleCancel}
+        footer={null} // Không có footer
+        width={800} // Đặt kích thước modal
+      >
+        {/* Hiển thị danh sách các file traffic */}
+        <Menu>
+        {trafficFiles.map((item: any, index) => (
+                <Menu.Item 
+                  key={`traffic-file-${index}`} 
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                >            
+                    <div>                    
+                    <Button onClick={()=>handleOnClickTraffic(item.id)} style={{ marginLeft: 5 , color: "rgb(91, 107, 121)" , backgroundColor: "rgb(178, 223, 219)" }} >{item.filename}</Button>
+                    </div>                  
+                </Menu.Item>
+              ))}</Menu>
+      </Modal>
+
+      {/* Modal hiển thị bảng traffic */}
+      <Modal
+        title="Traffic Data"
+        visible={isModalVisible1}
+        onCancel={handleCancel1}
+         // Không có footer
+        width={1500}
+        height={3000} // Đặt kích thước modal
+      >
+        {/* Hiển thị bảng traffic trong modal */}
+        <Table
+          dataSource={trafficData}
+          columns={TrafficColumns}
+          pagination={{
+            pageSize: 10,
+            showSizeChanger: false,
+            position: ['bottomRight'],
+            prevIcon: <Button>«</Button>,
+            nextIcon: <Button>»</Button>,
+          }}
+          loading={loading} // Hiển thị loading khi đang chờ dữ liệu
+          rowKey="id" // Đặt rowKey nếu dữ liệu có ID
+        />
+      </Modal>
         </div>
       </div>
     </div>
