@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect, useLayoutEffect } from "react";
-import { Button, Col, Row,  Card,Tabs, Tooltip, Table, Input, Select , List,Menu } from "antd";
+import { useState, useEffect, useLayoutEffect } from "react";
+import { Button, Col, Row, Tabs, Table, Input, Select , Menu } from "antd";
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Label} from "recharts";
 import './styles.scss'; // Import file SCSS
@@ -11,9 +11,9 @@ import { SearchOutlined, FilterOutlined } from '@ant-design/icons';
 
 
 import { Modal } from 'antd';
-import { useNavigate } from 'react-router-dom';
 import { gettraffic, gettrafficById} from '../../services/apiService';
 
+const correctedAnomalyTimestamps=["2022-01-21 00","2022-01-21 01"]
 const stackedbarchartdata = [
   {
     status_code: '200',
@@ -101,7 +101,10 @@ const Dashboard = () => {
   const [PieChartData9Audit, setPieChartData9Audit] = useState([]);
 
   const [totalE, setTotalEM4] = useState([]);
-  const [data, setColumns] = useState();
+
+  //Anomaly
+  const [anomalyTimestamps, setAnomalyTimestamps] = useState<string[]>([]);
+
 
   const dnsColumns = [
     { title: 'Line ID', dataIndex: 'LineId', key: 'lineId', width: 80 },
@@ -216,11 +219,19 @@ const Dashboard = () => {
       setPieChartData10Access(res['m10']);
       setPieChartData9Access(res['m9']);
  
+      setAnomalyTimestamps(res['m11'])
+      // const anomalies = tableDatam1
+      // .filter((item:any)=> item.Anomaly === 'Anomaly')  // Bước 1: Lọc các dòng có giá trị Anomaly là "Anomaly"
+      // .map((item:any) => item.Timestamp);               // Bước 2: Trích xuất Timestamp của các dòng đó
+
+      // setAnomalyTimestamps(anomalies); 
+      await console.log(anomalyTimestamps)
 
     }).catch((error) => {
       console.error("Error fetching log data:", error);
     });
   }, [id]);
+
 
   useEffect(() => {
     if (log_type === 'dns') {
@@ -269,55 +280,75 @@ const Dashboard = () => {
     handleTrafficFileSelect(trafficid)
 
   }
-  const convertLogTimestampToComparableFormat = (timestamp: string) => {
-    if (timestamp.includes('/')) {
-      // Định dạng 'YYYY/MM/DD HH:MM:SS' thành 'YYYY-MM-DDTHH:MM:SS'
-      return timestamp.replace(/\//g, '-').replace(' ', 'T');
-    } 
-    return timestamp;
+  const convertTimestampToComparableFormat = (timestamp: string) => {
+    // Thay '/' bằng '-' và khoảng trắng ' ' bằng 'T' để có định dạng chuẩn ISO
+    return timestamp.replace(/\//g, '-').replace(' ', 'T');
   };
   
+  // Hàm so sánh hai timestamp và kiểm tra chênh lệch thời gian có <= 30 giây
   const compareTimestamps = (logTimestamp: string, trafficTimestamp: string) => {
-    // Nếu là timestamp dạng milliseconds, chuyển nó thành dạng 'YYYY-MM-DDTHH:MM:SS'
+    let logDate, trafficDate;
+  
+    // Kiểm tra và chuyển đổi logTimestamp thành đối tượng Date
     if (!isNaN(Number(logTimestamp))) {
-      const logDate = new Date(Number(logTimestamp));
-      const formattedLogTimestamp = logDate.toISOString().slice(0, 19); // Lấy dạng 'YYYY-MM-DDTHH:MM:SS'
-      return formattedLogTimestamp === trafficTimestamp.replace(' ', 'T');
-    } 
-    
-    // Chuyển đổi timestamp log sang định dạng có thể so sánh được
-    const formattedLogTimestamp = convertLogTimestampToComparableFormat(logTimestamp);
-    
-    // So sánh dạng chuẩn
-    return formattedLogTimestamp === trafficTimestamp.replace(' ', 'T');
+      logDate = new Date(Number(logTimestamp)); // Trường hợp logTimestamp là số milliseconds
+    } else {
+      logDate = new Date(convertTimestampToComparableFormat(logTimestamp)); // Chuyển đổi chuỗi về định dạng chuẩn
+    }
+  
+    // Chuyển trafficTimestamp thành đối tượng Date
+    trafficDate = new Date(convertTimestampToComparableFormat(trafficTimestamp));
+  
+    // Kiểm tra tính hợp lệ của đối tượng Date
+    if (isNaN(logDate.getTime()) || isNaN(trafficDate.getTime())) {
+      console.error("Invalid date:", { logTimestamp, trafficTimestamp });
+      return false;
+    }
+  
+    // Tính toán chênh lệch thời gian tính bằng milliseconds
+    const timeDifference = Math.abs(logDate.getTime() - trafficDate.getTime());
+  
+    // Trả về true nếu chênh lệch nhỏ hơn hoặc bằng 30 giây (30,000 milliseconds)
+    return timeDifference <= 30000;
   };
   
+  // Hàm xử lý khi chọn file traffic
   const handleTrafficFileSelect = async (trafficFile: any) => {
-      console.log(trafficFile);
-      const trafficDataSet = await gettrafficById(trafficFile); // Lấy dữ liệu traffic theo ID
-      console.log(trafficDataSet)
-      console.log(selectedLogRecord)
-      setLoading(true); // Bắt đầu loading
-    
-      try {
-        if (selectedLogRecord) {
-          console.log(selectedLogRecord.Timestamp);
-          showModal1(true);
-          setTrafficData(trafficDataSet['m1'])
-          // Sử dụng hàm so sánh
-          const filteredTrafficData = trafficData.filter((item: any) => 
-            compareTimestamps(selectedLogRecord.Timestamp, item.Timestamp)
-          ); // Lọc theo Timestamp
+    console.log(trafficFile);
   
-          setTrafficData(filteredTrafficData); // Lưu dữ liệu đã lọc
+    try {
+      const trafficDataSet = await gettrafficById(trafficFile); // Lấy dữ liệu traffic theo ID
+      console.log(trafficDataSet);
+      console.log(selectedLogRecord);
+  
+      setLoading(true); // Bắt đầu loading
+  
+      if (selectedLogRecord && trafficDataSet) {
+        console.log(selectedLogRecord.Timestamp);
+  
+        // Lấy dữ liệu traffic từ trafficDataSet
+        let trafficData = trafficDataSet['m1'];
+        if (!trafficData || !trafficData.length) {
+          console.error("No traffic data available");
+          return;
         }
-      } catch (error) {
-        console.error("Error fetching traffic data:", error);
-      } finally {
-        setLoading(false); // Tắt loading
+  
+        // Lọc trafficData theo khoảng thời gian 30 giây
+        const filteredTrafficData = trafficData.filter((item: any) => 
+          compareTimestamps(selectedLogRecord.Timestamp, item.Timestamp)
+        );
+  
+        setTrafficData(filteredTrafficData); // Lưu dữ liệu đã lọc
+        showModal1(true); // Hiển thị modal
+      } else {
+        console.error("No selected log record or traffic data set found");
       }
-    };
-
+    } catch (error) {
+      console.error("Error fetching traffic data:", error);
+    } finally {
+      setLoading(false); // Tắt loading
+    }
+  };
 
 
   const handleCancel = () => {
@@ -406,21 +437,25 @@ const Dashboard = () => {
               {activeTabKey === "1" && (
                 <div>
                   <Row gutter={[24, 24]} className="chart-row">
+                    <Col span={12}>
                     <h2>DNS Event</h2>
-                      <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={barChartDatam2}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
-                          <YAxis><Label value="Number of Events" angle={-90} position="insideLeft" /></YAxis>
-                          <RechartsTooltip />
-                          <Legend formatter={() => 'Event Type'}/>
-                          <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'top' }}>
-                            {barChartDatam2?.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
-                            ))}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', marginTop: '20px' }}>
+                    <thead>
+                      <tr>
+                        <th style={{ border: '1px solid black', padding: '8px' }}>Name</th>
+                        <th style={{ border: '1px solid black', padding: '8px' }}>UV</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {barChartDatam2?.map((item, index) => (
+                        <tr key={index}>
+                          <td style={{ border: '1px solid black', padding: '8px' }}>{item['name']}</td>
+                          <td style={{ border: '1px solid black', padding: '8px' }}>{item['uv']}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table></Col>
+                    
                     </Row>
                     <Row gutter={[40, 40]} className="chart-row">
                     <Col span={24}>
@@ -429,10 +464,24 @@ const Dashboard = () => {
                         <LineChart data={lineChartDatam3}>
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="name" />
-                          <YAxis><Label value="Number of Events" angle={-90} position="insideLeft" /></YAxis>
+                          <YAxis>
+                            <Label value="Số sự kiện" angle={-90} position="insideLeft" />
+                          </YAxis>
                           <RechartsTooltip />
-                          <Legend formatter={() => 'Time'}/>
-                          <Line type="monotone" dataKey="pv" stroke="#8884d8" />
+                          <Legend formatter={() => 'Thời gian'} />
+                          <Line
+                            type="monotone"
+                            dataKey="pv"
+                            stroke="#8884d8"
+                            dot={(dataPoint) => {
+                              const { cx, cy } = dataPoint;  // Lấy giá trị cx và cy từ dataPoint
+                              return anomalyTimestamps.includes(dataPoint.payload.name) ? (
+                                <circle cx={cx} cy={cy} r={8} fill="red" />  // Định nghĩa vị trí của chấm dựa trên cx, cy
+                              ) : (
+                                <circle cx={cx} cy={cy} r={4} fill="#8884d8" />
+                              );
+                            }}
+                          />
                         </LineChart>
                       </ResponsiveContainer>
                     </Col>
@@ -915,6 +964,8 @@ const Dashboard = () => {
           }}
           loading={loading} // Hiển thị loading khi đang chờ dữ liệu
           rowKey="id" // Đặt rowKey nếu dữ liệu có ID
+          rowClassName={(TrafficColumns:any) => (TrafficColumns.Label === 'Anomaly' ? 'anomaly-row' : '')}
+          className="custom-table"
         />
       </Modal>
         </div>

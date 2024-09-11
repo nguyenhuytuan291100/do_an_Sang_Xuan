@@ -12,12 +12,10 @@ import { SearchOutlined, FilterOutlined } from '@ant-design/icons';
 import { Modal } from 'antd';
 import { getlog, getlogByID} from '../../services/apiService';
 
+
+import FlowChart from "pages/App/subcomponents/MainLayout/subcomponents/FlowChart";
 // dataip M20
-const dataipmap = [
-  { sourceIP: '1.1.1.1', destinationIP: '8.8.8.8' },
-  { sourceIP: '9.9.9.9', destinationIP: '8.6.0.1' },
-  // Thêm các cặp IP khác
-];
+
 const { TabPane } = Tabs;
 const COLORS = [
   '#0088FE', // Bright Blue
@@ -43,6 +41,15 @@ const COLORS = [
 ];
 
 const Dashboard = () => {
+
+  const flowData = [
+    { sourceIP: '10.10.10.10', destinationIP: '8.8.8.8', time: '4:35:40 PM' },
+    { sourceIP: '192.168.88.1', destinationIP: '10.10.10.30', time: '4:35:50 PM' },
+    { sourceIP: '10.10.10.30', destinationIP: '192.168.88.1', time: '4:35:55 PM' }, // Chiều ngược lại
+    { sourceIP: '192.168.88.52', destinationIP: '192.168.89.2', time: '4:36:12 PM' },
+    { sourceIP: '10.10.10.10', destinationIP: '8.8.8.8', time: '4:36:14 PM' },
+  ];
+
   const { id } = useParams();
   const [viewType, setViewType] = useState("Map");
   const [activeTabKey, setActiveTabKey] = useState("1");
@@ -102,8 +109,7 @@ const Dashboard = () => {
   // M19
   const [lineChartData19, setLineChartDatam19] = useState([]);
 // M20
-  const [dataM20, setDataM20] = useState<any>('');
-  const [htmlContentM20, setHtmlContentM20] = useState("");
+  const [dataM20, setDataM20] = useState([]);
 
   const [columns, setColumns] = useState([
     { title: 'Flow ID', dataIndex: 'Flow ID', key: 'flowID', width: 100 },
@@ -244,14 +250,7 @@ const Dashboard = () => {
       setLineChartDatam19(res['m19']); // Giả sử dữ liệu bar chart nằm ở phần thứ 5
 
       setDataM20(res['m20']);
-      const rawHtmlContent = res['m20']; // Đây là dữ liệu HTML bạn đã cung cấp
-      const formattedHtmlContent = rawHtmlContent
-          .replace(/\\n/g, "")
-          .replace(/\\t/g, "")
-          .replace(/\\"/g, '"')
-          .replace(/\\'/g, "'");
-      setHtmlContentM20(formattedHtmlContent);
-      console.log(res['m14'])
+      console.log(res['m20'])
     }).catch((error) => {
       console.error("Error fetching traffic data:", error);
     });
@@ -346,6 +345,10 @@ const Dashboard = () => {
     id: string; // nếu có thêm id hoặc các thuộc tính khác
     [key: string]: any;
   }
+  interface LogRecord {
+    Anomaly: string; // Cột Anomaly luôn tồn tại và là chuỗi
+    [key: string]: any; // Các cột khác có thể thay đổi
+  }
   
   // const navigate = useNavigate();
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -375,55 +378,72 @@ const Dashboard = () => {
     handleTrafficFileSelect(logid)
 
   }
-  const convertLogTimestampToComparableFormat = (timestamp: string) => {
-    if (timestamp.includes('/')) {
-      // Định dạng 'YYYY/MM/DD HH:MM:SS' thành 'YYYY-MM-DDTHH:MM:SS'
-      return timestamp.replace(/\//g, '-').replace(' ', 'T');
-    } 
-    return timestamp;
+  const convertTimestampToComparableFormat = (timestamp: string) => {
+    // Thay '/' bằng '-' và khoảng trắng ' ' bằng 'T' để có định dạng chuẩn ISO
+    return timestamp.replace(/\//g, '-').replace(' ', 'T');
   };
+  
   
   const compareTimestamps = (logTimestamp: string, trafficTimestamp: string) => {
-    // Nếu là timestamp dạng milliseconds, chuyển nó thành dạng 'YYYY-MM-DDTHH:MM:SS'
-    if (!isNaN(Number(logTimestamp))) {
-      const logDate = new Date(Number(logTimestamp));
-      const formattedLogTimestamp = logDate.toISOString().slice(0, 19); // Lấy dạng 'YYYY-MM-DDTHH:MM:SS'
-      return formattedLogTimestamp === trafficTimestamp.replace(' ', 'T');
-    } 
-    
-    // Chuyển đổi timestamp log sang định dạng có thể so sánh được
-    const formattedLogTimestamp = convertLogTimestampToComparableFormat(logTimestamp);
-    
-    // So sánh dạng chuẩn
-    return formattedLogTimestamp === trafficTimestamp.replace(' ', 'T');
+    let logDate, trafficDate;
+  
+    // Kiểm tra và chuyển đổi logTimestamp thành đối tượng Date
+    if (!isNaN(Number(trafficTimestamp))) {
+      trafficDate = new Date(Number(trafficTimestamp)); // Trường hợp logTimestamp là số milliseconds
+    } else {
+      trafficDate = new Date(convertTimestampToComparableFormat(trafficTimestamp)); // Chuyển đổi chuỗi về định dạng chuẩn
+    }
+  
+    // Chuyển trafficTimestamp thành đối tượng Date
+    logDate = new Date(convertTimestampToComparableFormat(logTimestamp));
+  
+    // Kiểm tra tính hợp lệ của đối tượng Date
+    if (isNaN(trafficDate.getTime()) || isNaN(logDate.getTime())) {
+      console.error("Invalid date:", { logTimestamp, trafficTimestamp });
+      return false;
+    }
+  
+    // Tính toán chênh lệch thời gian tính bằng milliseconds
+    const timeDifference = Math.abs(logDate.getTime() - trafficDate.getTime());
+  
+    // Trả về true nếu chênh lệch nhỏ hơn hoặc bằng 30 giây (30,000 milliseconds)
+    return timeDifference <= 30000;
   };
-  
   const handleTrafficFileSelect = async (logFile: any) => {
-      console.log(logFile);
-      const logDataSet = await getlogByID(logFile); // Lấy dữ liệu traffic theo ID
-      console.log(logDataSet)
-      console.log(selectedTraficRecord)
-      setLoading(true); // Bắt đầu loading
-    
-      try {
-        if (selectedTraficRecord) {
-          console.log(selectedTraficRecord.Timestamp);
-          showModal1(true);
-          setLogData(logDataSet['m1'])
-          setLogType(logDataSet['typeLog'])
-          console.log(log_type)
-          // Sử dụng hàm so sánh
-          const filteredTrafficData = logData.filter((item: any) => 
-            compareTimestamps(selectedTraficRecord.Timestamp, item.Timestamp)
-          ); // Lọc theo Timestamp
+    console.log(logFile);
   
-          setLogData(filteredTrafficData); // Lưu dữ liệu đã lọc
+    try {
+      const logDataSet = await getlogByID(logFile); // Lấy dữ liệu traffic theo ID
+      console.log(logDataSet);
+      console.log(selectedTraficRecord);
+  
+      setLoading(true); // Bắt đầu loading
+  
+      if (selectedTraficRecord && logDataSet) {
+        console.log(selectedTraficRecord.Timestamp);
+        setLogType(logDataSet['typeLog'])
+        // Lấy dữ liệu traffic từ trafficDataSet
+        let logData = logDataSet['m1'];
+        if (!logData || !logData.length) {
+          console.error("No log data available");
+          return;
         }
-      } catch (error) {
-        console.error("Error fetching traffic data:", error);
-      } finally {
-        setLoading(false); // Tắt loading
+  
+        // Lọc trafficData theo khoảng thời gian 30 giây
+        const filteredTrafficData = logData.filter((item: any) => 
+          compareTimestamps(selectedTraficRecord.Timestamp, item.Timestamp)
+        );
+  
+        setLogData(filteredTrafficData); // Lưu dữ liệu đã lọc
+        showModal1(true); // Hiển thị modal
+      } else {
+        console.error("No selected log record or traffic data set found");
       }
+    } catch (error) {
+      console.error("Error fetching traffic data:", error);
+    } finally {
+      setLoading(false); // Tắt loading
+    }
     };
 
     const handleCancel = () => {
@@ -477,17 +497,10 @@ const Dashboard = () => {
                 <div>
                   <div ref={networkRef} style={{ height: '400px', marginBottom: '20px', border: '1px solid lightgray' }} />
                   <Row>
-                    <Col span={24}>
-                      {/* <Card style={{ background: "#1c1c1e", color: "#fff" }}> */}
-                        {/* <h3>Dữ liệu từ res[20]</h3> */}
-                        {/* <p>{dataM20 && JSON.stringify(dataM20)}</p> */}
-                        <div>
-                        <div dangerouslySetInnerHTML={{ __html: htmlContentM20 }} />
-                        <div dangerouslySetInnerHTML={{ __html: dataM20 }} />
-                        </div>
-                        
-                      {/* </Card> */}
-                    </Col>
+                  <div>
+                    <h1>Network Flow Chart</h1>
+                    <FlowChart/>
+                  </div>
                   </Row>
                   <Row >
                     <Col span={24}><div >
@@ -495,7 +508,7 @@ const Dashboard = () => {
                   </div>
                  </Col>
                   </Row>
-                  <Row><Col span={24}> <div style={{ width: '100%', height: '600px', marginTop: '20px' }}><MapComponent data={dataipmap} /></div></Col></Row>
+                  <Row><Col span={24}> <div style={{ width: '100%', height: '600px', marginTop: '20px' }}><MapComponent data={dataM20} /></div></Col></Row>
                 </div>
               )}
               {activeTabKey === "2" && (
@@ -896,7 +909,7 @@ const Dashboard = () => {
             </div>
           )}
         <Modal
-        title="Chọn file Traffic"
+        title="Chọn file Log"
         visible={isModalVisible}
         onCancel={handleCancel}
         footer={null} // Không có footer
@@ -917,12 +930,12 @@ const Dashboard = () => {
       </Modal>
           {/* Modal hiển thị bảng traffic */}
       <Modal
-        title="Traffic Data"
+        title="Log Data"
         visible={isModalVisible1}
         onCancel={handleCancel1}
          // Không có footer
-        width={1500}
-        height={3000} // Đặt kích thước modal
+        width={2000}
+// Đặt kích thước modal
       >
         <h2>
                 {log_type === 'dns' ? 'DNS Log' :
@@ -940,8 +953,10 @@ const Dashboard = () => {
             prevIcon: <Button>«</Button>,
             nextIcon: <Button>»</Button>,
           }}
+          scroll={{x:1000}}
           loading={loading} // Hiển thị loading khi đang chờ dữ liệu
           rowKey="id" // Đặt rowKey nếu dữ liệu có ID
+          rowClassName={(record:LogRecord) => record.Anomaly === 'Anomaly' ? 'anomaly-row' : ''}
         />
       </Modal>
         </div>

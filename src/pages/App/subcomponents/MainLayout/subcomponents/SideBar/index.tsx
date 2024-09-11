@@ -195,7 +195,7 @@ const SideBar: React.FC<Props> = ({ collapsed, setCollapsed }) => {
                   <Button onClick={() => handleOnClickDeleteLog(item.id)} 
                       style={{ cursor: 'pointer', marginRight: 0 , color: "rgb(91, 107, 121)" , backgroundColor: "rgb(178, 223, 219)" }} icon={<MinusOutlined         
                         />}></Button>
-                    <Button onClick={()=>handleOnClickLog(item.id)} style={{ marginLeft: 5 , color: "rgb(91, 107, 121)" , backgroundColor: "rgb(178, 223, 219)" }} icon={<FileOutlined />}>{item.filename}</Button>
+                    <Button onClick={()=>handleOnClickLog(item.id)} style={{ marginLeft: 5 , color: "rgb(91, 107, 121)" , backgroundColor: "rgb(178, 223, 219)"}} icon={<FileOutlined />}>{item.filename}</Button>
                     
                     </div>
                   
