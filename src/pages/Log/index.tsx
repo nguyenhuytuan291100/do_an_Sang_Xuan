@@ -13,7 +13,6 @@ import { SearchOutlined, FilterOutlined } from '@ant-design/icons';
 import { Modal } from 'antd';
 import { gettraffic, gettrafficById} from '../../services/apiService';
 
-const correctedAnomalyTimestamps=["2022-01-21 00","2022-01-21 01"]
 const stackedbarchartdata = [
   {
     status_code: '200',
@@ -27,6 +26,15 @@ const stackedbarchartdata = [
   },
   {
     status_code: '404',
+    methods: [
+      { method: 'GET', count: 4000 },
+      { method: 'HEAD', count: 2000 },
+      { method: 'OPTIONS', count: 50 },
+      { method: 'POST', count: 100 },
+    ]
+  },
+  {
+    status_code: '408',
     methods: [
       { method: 'GET', count: 4000 },
       { method: 'HEAD', count: 2000 },
@@ -99,8 +107,6 @@ const Dashboard = () => {
   const [barChartDatam7Audit, setBarChartDatam7Audit] = useState([]);
   const [barChartDatam8Audit, setBarChartDatam8Audit] = useState([]);
   const [PieChartData9Audit, setPieChartData9Audit] = useState([]);
-
-  const [totalE, setTotalEM4] = useState([]);
 
   //Anomaly
   const [anomalyTimestamps, setAnomalyTimestamps] = useState<string[]>([]);
@@ -204,7 +210,6 @@ const Dashboard = () => {
       // Process network data
       setBarChartDatam2(res['m2'])
       setLineChartDatam3(res['m3'])//ok
-      setTotalEM4(res['m4']);
       setBarChartDatam4(res['m4']);
       setBarChartDatam5(res['m5']);
 
