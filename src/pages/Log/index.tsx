@@ -207,17 +207,24 @@ const Dashboard = () => {
       setTotalEM4(res['m4']);
       setBarChartDatam4(res['m4']);
       setBarChartDatam5(res['m5']);
-      //Audit
-      setBarChartDatam6Audit(res['m6']);
-      setBarChartDatam7Audit(res['m7']);
-      setBarChartDatam8Audit(res['m8']);
-      setPieChartData9Audit(res['m9']);
-      //Access
-      setBarChartDatam6Access(res['m6'])
-      setBarChartDatam7Acsess(res['m7']);
-      setPieChartData8Access(res['m8']);
-      setPieChartData10Access(res['m10']);
-      setPieChartData9Access(res['m9']);
+
+      if(log_type === "audit"){
+        //Audit
+        setBarChartDatam6Audit(res['m6']);
+        setBarChartDatam7Audit(res['m7']);
+        setBarChartDatam8Audit(res['m8']);
+        setPieChartData9Audit(res['m9']);
+      }else if(log_type === "access"){
+
+          //Access
+        setBarChartDatam6Access(res['m6'])
+        setBarChartDatam7Acsess(res['m7']);
+        setPieChartData8Access(res['m8']);
+        setPieChartData10Access(res['m10']);
+        setPieChartData9Access(res['m9']);
+      }
+      
+      
  
       setAnomalyTimestamps(res['m11'])
       // const anomalies = tableDatam1
@@ -553,7 +560,19 @@ const Dashboard = () => {
                         <YAxis><Label value="Number" angle={-90} position="insideLeft" /></YAxis>
                         <RechartsTooltip />
                         <Legend formatter={() => 'Time'}/>
-                        <Line type="monotone" dataKey="pv" stroke="#8884d8" />
+                        <Line
+                            type="monotone"
+                            dataKey="pv"
+                            stroke="#8884d8"
+                            dot={(dataPoint) => {
+                              const { cx, cy } = dataPoint;  // Lấy giá trị cx và cy từ dataPoint
+                              return anomalyTimestamps.includes(dataPoint.payload.name) ? (
+                                <circle cx={cx} cy={cy} r={8} fill="red" />  // Định nghĩa vị trí của chấm dựa trên cx, cy
+                              ) : (
+                                <circle cx={cx} cy={cy} r={4} fill="#8884d8" />
+                              );
+                            }}
+                          />
                       </LineChart>
                     </ResponsiveContainer>
                   </Col>
@@ -702,7 +721,19 @@ const Dashboard = () => {
                         <YAxis />
                         <RechartsTooltip />
                         <Legend />
-                        <Line type="monotone" dataKey="pv" stroke="#8884d8" />
+                        <Line
+                            type="monotone"
+                            dataKey="pv"
+                            stroke="#8884d8"
+                            dot={(dataPoint) => {
+                              const { cx, cy } = dataPoint;  // Lấy giá trị cx và cy từ dataPoint
+                              return anomalyTimestamps.includes(dataPoint.payload.name) ? (
+                                <circle cx={cx} cy={cy} r={8} fill="red" />  // Định nghĩa vị trí của chấm dựa trên cx, cy
+                              ) : (
+                                <circle cx={cx} cy={cy} r={4} fill="#8884d8" />
+                              );
+                            }}
+                          />
                       </LineChart>
                     </ResponsiveContainer>
                   </Col>
