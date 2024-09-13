@@ -8,8 +8,6 @@ import { getlogByID } from "services/apiService";
 import ResizableTitle from "pages/App/subcomponents/MainLayout/subcomponents/ResiableTitle";
 import { SearchOutlined, FilterOutlined } from '@ant-design/icons';
 
-
-
 import { Modal } from 'antd';
 import { gettraffic, gettrafficById} from '../../services/apiService';
 
@@ -72,7 +70,6 @@ const COLORS = [
   '#2BBBAD', // Bright Cyan
 ];
 
-
 const Dashboard = () => {
   //log
   const { id } = useParams();
@@ -110,7 +107,6 @@ const Dashboard = () => {
 
   //Anomaly
   const [anomalyTimestamps, setAnomalyTimestamps] = useState<string[]>([]);
-
 
   const dnsColumns = [
     { title: 'Line ID', dataIndex: 'LineId', key: 'lineId', width: 80 },
@@ -175,7 +171,6 @@ const Dashboard = () => {
     setSelectedField(value);
   };
 
- 
   const filteredData = tableDatam1.filter((item) => {
     if (!selectedField || selectedField === "All Fields") {
       return Object.values(item).some((val) => {
@@ -220,30 +215,19 @@ const Dashboard = () => {
         setBarChartDatam8Audit(res['m8']);
         setPieChartData9Audit(res['m9']);
       }else if(log_type === "access"){
-
-          //Access
+        //Access
         setBarChartDatam6Access(res['m6'])
         setBarChartDatam7Acsess(res['m7']);
         setPieChartData8Access(res['m8']);
         setPieChartData10Access(res['m10']);
         setPieChartData9Access(res['m9']);
       }
-      
-      
- 
       setAnomalyTimestamps(res['m11'])
-      // const anomalies = tableDatam1
-      // .filter((item:any)=> item.Anomaly === 'Anomaly')  // Bước 1: Lọc các dòng có giá trị Anomaly là "Anomaly"
-      // .map((item:any) => item.Timestamp);               // Bước 2: Trích xuất Timestamp của các dòng đó
-
-      // setAnomalyTimestamps(anomalies); 
-      await console.log(anomalyTimestamps)
 
     }).catch((error) => {
       console.error("Error fetching log data:", error);
     });
   }, [id]);
-
 
   useEffect(() => {
     if (log_type === 'dns') {
@@ -280,7 +264,6 @@ const Dashboard = () => {
       // Kiểm tra xem timestamp của log có chứa chuỗi timestamp đã chọn không (tìm kiếm gần đúng)
       return log.Timestamp.includes(timestamp);
     });
-  
     setSelectedTimestamp(timestamp);
     setFilteredLogs(logsForTimestamp);
     setIsLogModalVisibleAudit(true);  // Mở modal
@@ -291,20 +274,57 @@ const Dashboard = () => {
       // Kiểm tra xem timestamp của log có chứa chuỗi timestamp đã chọn không (tìm kiếm gần đúng)
       return log.Timestamp.includes(timestamp);
     });
-  
     setSelectedTimestamp(timestamp);
     setFilteredLogs(logsForTimestamp);
     setIsLogModalVisibleAccess(true);  // Mở modal
   };
 
+  type ChartData = {
+    name: string;
+    uv: number;
+  };
 
+  const getTopXData = (data: ChartData[], topX: number): ChartData[] => {
+    if (!Array.isArray(data) || data.length === 0 || typeof topX !== 'number' || topX <= 0) {
+      return data; // Trả về dữ liệu gốc nếu không có dữ liệu hoặc topX không hợp lệ
+    }
+    // Sắp xếp dữ liệu theo 'uv' giảm dần và trả về top X phần tử
+    return [...data].sort((a, b) => b.uv - a.uv).slice(0, topX);
+  };
+
+  const [barChartDatam4TopX, setBarChartDatam4TopX] = useState<ChartData[]>([]);
+  // setBarChartDatam4TopX(barChartDatam4)
+  const [barChartDatam5TopX, setBarChartDatam5TopX] = useState<ChartData[]>([]);
+  const [barChartDatam6TopX, setBarChartDatam6TopX] = useState<ChartData[]>([]);
+  const [barChartDatam7TopX, setBarChartDatam7TopX] = useState<ChartData[]>([]);
+  const [barChartDatam8TopX, setBarChartDatam8TopX] = useState<ChartData[]>([]);
+
+  const handleTopXm4Change = (data: ChartData[],topX: number) => {
+    setBarChartDatam4TopX(getTopXData(data, topX));
+    // Trực tiếp cập nhật state với dữ liệu đã lọc mà không tạo biến trung gian
+  };
+  const handleTopXm5Change = (data: ChartData[],topX: number) => {
+    setBarChartDatam5TopX(getTopXData(data, topX));
+    // Trực tiếp cập nhật state với dữ liệu đã lọc mà không tạo biến trung gian
+  };
+  const handleTopXm6Change = (data: ChartData[],topX: number) => {
+    setBarChartDatam6TopX(getTopXData(data, topX));
+    // Trực tiếp cập nhật state với dữ liệu đã lọc mà không tạo biến trung gian
+  };
+  const handleTopXm7Change = (data: ChartData[],topX: number) => {
+    setBarChartDatam7TopX(getTopXData(data, topX));
+    // Trực tiếp cập nhật state với dữ liệu đã lọc mà không tạo biến trung gian
+  };
+  const handleTopXm8Change = (data: ChartData[],topX: number) => {
+    setBarChartDatam8TopX(getTopXData(data, topX));
+    // Trực tiếp cập nhật state với dữ liệu đã lọc mà không tạo biến trung gian
+  };
   //link traffic
   interface LogRecord {
     Timestamp: string; // hoặc Date, tùy vào định dạng
     id: string; // nếu có thêm id hoặc các thuộc tính khác
     Anomaly?: string;  // Thuộc tính Anomaly có thể là string hoặc undefined
       // Thêm các thuộc tính khác nếu cần
-
     [key: string]: any;
   }
 
@@ -339,34 +359,27 @@ const Dashboard = () => {
     // Thay '/' bằng '-' và khoảng trắng ' ' bằng 'T' để có định dạng chuẩn ISO
     return timestamp.replace(/\//g, '-').replace(' ', 'T');
   };
-  
   // Hàm so sánh hai timestamp và kiểm tra chênh lệch thời gian có <= 30 giây
   const compareTimestamps = (logTimestamp: string, trafficTimestamp: string) => {
     let logDate, trafficDate;
-  
     // Kiểm tra và chuyển đổi logTimestamp thành đối tượng Date
     if (!isNaN(Number(logTimestamp))) {
       logDate = new Date(Number(logTimestamp)); // Trường hợp logTimestamp là số milliseconds
     } else {
       logDate = new Date(convertTimestampToComparableFormat(logTimestamp)); // Chuyển đổi chuỗi về định dạng chuẩn
     }
-  
     // Chuyển trafficTimestamp thành đối tượng Date
     trafficDate = new Date(convertTimestampToComparableFormat(trafficTimestamp));
-  
     // Kiểm tra tính hợp lệ của đối tượng Date
     if (isNaN(logDate.getTime()) || isNaN(trafficDate.getTime())) {
       console.error("Invalid date:", { logTimestamp, trafficTimestamp });
       return false;
     }
-  
     // Tính toán chênh lệch thời gian tính bằng milliseconds
     const timeDifference = Math.abs(logDate.getTime() - trafficDate.getTime());
-  
     // Trả về true nếu chênh lệch nhỏ hơn hoặc bằng 30 giây (30,000 milliseconds)
     return timeDifference <= 30000;
   };
-  
   // Hàm xử lý khi chọn file traffic
   const handleTrafficFileSelect = async (trafficFile: any) => {
     console.log(trafficFile);
@@ -404,7 +417,6 @@ const Dashboard = () => {
       setLoading(false); // Tắt loading
     }
   };
-
 
   const handleCancel = () => {
     setIsModalVisible(false);
@@ -557,7 +569,10 @@ const Dashboard = () => {
                       height={1000}
                     >
                       <Table
-                        dataSource={filteredLogs}
+                        dataSource={filteredLogs.map((item: any) => ({
+                          ...item,
+                          rowClassName: item.label === 'Anomaly' ? 'anomaly-row' : '',
+                        }))}
                         columns={columns}
                         rowKey="id"
                       pagination={{
@@ -573,7 +588,7 @@ const Dashboard = () => {
                           cell: ResizableTitle,
                         },
                       }}
-                      rowClassName={(record:LogRecord) => (record?.Anomaly === 'Anomaly' ? 'anomaly-row' : '')}
+                      rowClassName={(record) => (record.Anomaly === 'Anomaly' ? 'anomaly-row' : '')}
                       className="custom-table"
                       />
                     </Modal>
@@ -581,9 +596,15 @@ const Dashboard = () => {
 
                   <Row gutter={[20, 20]} className="chart-row">
                     <Col span={12}>  
-                    <h2>Top 10 Source IPs by Number of DNS Events</h2>              
+                    <h2>Top Source IPs by Number of DNS Events</h2>  
+                     {/* Nhóm nút Top 3, Top 5, Top 10 */}
+                    <div style={{ marginBottom: '10px' }}>
+                      <Button onClick={() => handleTopXm4Change(barChartDatam4,3)}>Top 3</Button>
+                      <Button onClick={() => handleTopXm4Change(barChartDatam4,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button onClick={() => handleTopXm4Change(barChartDatam4,10)} style={{ marginLeft: 8 }}>Top 10</Button>
+                    </div>            
                       <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={barChartDatam4}>
+                        <BarChart data={barChartDatam4TopX.length > 0 ? barChartDatam4TopX : barChartDatam4}>
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="name" ></XAxis>
                           <YAxis ><Label value="Number of Events" angle={-90} position="insideLeft" /></YAxis>
@@ -599,8 +620,13 @@ const Dashboard = () => {
                     </Col>
                     <Col span={12}>
                     <h2>Distribution of DNS Query Type</h2>
+                    <div style={{ marginBottom: '10px' }}>
+                      <Button onClick={() => handleTopXm5Change(barChartDatam5,3)}>Top 3</Button>
+                      <Button onClick={() => handleTopXm5Change(barChartDatam5,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button onClick={() => handleTopXm5Change(barChartDatam5,10)} style={{ marginLeft: 8 }}>Top 10</Button>
+                    </div>  
                       <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={barChartDatam5}>
+                        <BarChart data={barChartDatam5TopX.length > 0 ? barChartDatam5TopX : barChartDatam5}>
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="name"></XAxis>
                           <YAxis><Label value="Number of Queries" angle={-90} position="insideLeft" /></YAxis>
@@ -671,7 +697,7 @@ const Dashboard = () => {
                   </Col>
                 </Row>
                 <Modal
-                      title={`Log DNS for ${selectedTimestamp}`}
+                      title={`Log Audit for ${selectedTimestamp}`}
                       visible={isLogModalVisibleAudit}
                       onCancel={() => setIsLogModalVisibleAudit(false)}
                       footer={null}
@@ -679,7 +705,10 @@ const Dashboard = () => {
                       height={1000}
                     >
                       <Table
-                        dataSource={filteredLogs}
+                        dataSource={filteredLogs.map((item: any) => ({
+                          ...item,
+                          rowClassName: item.label === 'Anomaly' ? 'anomaly-row' : '',
+                        }))}
                         columns={columns}
                         rowKey="id"
                       pagination={{
@@ -695,15 +724,20 @@ const Dashboard = () => {
                           cell: ResizableTitle,
                         },
                       }}
-                      rowClassName={(record:LogRecord) => (record?.Anomaly === 'Anomaly' ? 'anomaly-row' : '')}
+                      rowClassName={(record) => (record.Anomaly === 'Anomaly' ? 'anomaly-row' : '')}
                       className="custom-table"
                       />
                     </Modal>
                 <Row gutter={[20, 20]} className="chart-row">
                   <Col span={12}>  
-                  <h2>m3.1audit</h2>              
+                  <h2>Event type</h2>     
+                  <div style={{ marginBottom: '10px' }}>
+                      <Button onClick={() => handleTopXm4Change(barChartDatam4,3)}>Top 3</Button>
+                      <Button onClick={() => handleTopXm4Change(barChartDatam4,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button onClick={() => handleTopXm4Change(barChartDatam4,10)} style={{ marginLeft: 8 }}>Top 10</Button>
+                    </div>           
                     <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={barChartDatam4}>
+                      <BarChart data={barChartDatam4TopX.length > 0 ? barChartDatam4TopX : barChartDatam4}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
                         <YAxis><Label value="Number" angle={-90} position="insideLeft" /></YAxis>
@@ -718,14 +752,19 @@ const Dashboard = () => {
                     </ResponsiveContainer>            
                   </Col>
                   <Col span={12}>
-                  <h2>m3.2</h2>
+                  <h2>Account activity</h2>
+                  <div style={{ marginBottom: '10px' }}>
+                      <Button onClick={() => handleTopXm5Change(barChartDatam5,3)}>Top 3</Button>
+                      <Button onClick={() => handleTopXm5Change(barChartDatam5,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button onClick={() => handleTopXm5Change(barChartDatam5,10)} style={{ marginLeft: 8 }}>Top 10</Button>
+                    </div>  
                     <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={barChartDatam5}>
+                      <BarChart data={barChartDatam5TopX.length > 0 ? barChartDatam5TopX : barChartDatam5}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
-                        <YAxis />
+                        <YAxis><Label value="Number" angle={-90} position="insideLeft" /></YAxis>
                         <RechartsTooltip />
-                        <Legend />
+                        <Legend formatter={() => 'Account'}/>
                         <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'top' }}>
                             {barChartDatam5?.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
@@ -737,14 +776,19 @@ const Dashboard = () => {
                 </Row>
                 <Row gutter={[20, 20]} className="chart-row">
                   <Col span={12}>  
-                  <h2>m3.3audit</h2>              
+                  <h2>PID</h2>   
+                  <div style={{ marginBottom: '10px' }}>
+                      <Button onClick={() => handleTopXm6Change(barChartDatam6Audit,3)}>Top 3</Button>
+                      <Button onClick={() => handleTopXm6Change(barChartDatam6Audit,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button onClick={() => handleTopXm6Change(barChartDatam6Audit,10)} style={{ marginLeft: 8 }}>Top 10</Button>
+                    </div>             
                     <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={barChartDatam6Audit}>
+                      <BarChart data={barChartDatam6TopX.length > 0 ? barChartDatam6TopX : barChartDatam6Audit}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
-                        <YAxis />
+                        <YAxis><Label value="Number" angle={-90} position="insideLeft" /></YAxis>
                         <RechartsTooltip />
-                        <Legend />
+                        <Legend formatter={() => 'PID'}/>
                         <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'top' }}>
                             {barChartDatam6Audit?.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
@@ -754,14 +798,19 @@ const Dashboard = () => {
                     </ResponsiveContainer>            
                   </Col>
                   <Col span={12}>
-                  <h2>m3.4</h2>
+                  <h2>UID</h2>
+                  <div style={{ marginBottom: '10px' }}>
+                      <Button onClick={() => handleTopXm7Change(barChartDatam7Audit,3)}>Top 3</Button>
+                      <Button onClick={() => handleTopXm7Change(barChartDatam7Audit,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button onClick={() => handleTopXm7Change(barChartDatam7Audit,10)} style={{ marginLeft: 8 }}>Top 10</Button>
+                    </div>  
                     <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={barChartDatam7Audit}>
+                      <BarChart data={barChartDatam7TopX.length > 0 ? barChartDatam7TopX : barChartDatam7Audit}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
-                        <YAxis />
+                        <YAxis><Label value="Number" angle={-90} position="insideLeft" /></YAxis>
                         <RechartsTooltip />
-                        <Legend />
+                        <Legend formatter={() => 'UID'}/>
                         <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'top' }}>
                             {barChartDatam7Audit?.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
@@ -773,14 +822,19 @@ const Dashboard = () => {
                 </Row>
                 <Row gutter={[20, 20]} className="chart-row">
                   <Col span={12}>  
-                  <h2>m3.5audit</h2>              
+                  <h2>EXE</h2> 
+                  <div style={{ marginBottom: '10px' }}>
+                      <Button onClick={() => handleTopXm8Change(barChartDatam8Audit,3)}>Top 3</Button>
+                      <Button onClick={() => handleTopXm8Change(barChartDatam8Audit,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button onClick={() => handleTopXm8Change(barChartDatam8Audit,10)} style={{ marginLeft: 8 }}>Top 10</Button>
+                    </div>               
                     <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={barChartDatam8Audit}>
+                      <BarChart data={barChartDatam8TopX.length > 0 ? barChartDatam8TopX : barChartDatam8Audit}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
-                        <YAxis />
+                        <YAxis><Label value="Number" angle={-90} position="insideLeft" /></YAxis>
                         <RechartsTooltip />
-                        <Legend />
+                        <Legend formatter={() => 'EXE command'}/>
                         <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'top' }}>
                             {barChartDatam8Audit?.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
@@ -790,7 +844,7 @@ const Dashboard = () => {
                     </ResponsiveContainer>            
                   </Col>
                   <Col span={12}>
-                  <h2>m5audit</h2>
+                  <h2>Successful Event Categories</h2>
                     <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
                           <Pie
@@ -816,7 +870,7 @@ const Dashboard = () => {
               {activeTabKey === "3" && (
                 <div>
                   <Row gutter={[24, 24]} className="chart-row">
-                  <h2>M1access</h2>
+                  <h2>Event Template</h2>
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={barChartDatam2}>
                         <CartesianGrid strokeDasharray="3 3" />
@@ -835,7 +889,7 @@ const Dashboard = () => {
                   </Row>
                   <Row gutter={[40, 40]} className="chart-row">
                   <Col span={23}>
-                    <h4>m2access</h4>
+                    <h4>Number Event Per Hours</h4>
                     <ResponsiveContainer width="100%" height={300}>
                       <LineChart data={lineChartDatam3}>
                         <CartesianGrid strokeDasharray="3 3" />
@@ -868,7 +922,7 @@ const Dashboard = () => {
                   </Col>
                 </Row>
                 <Modal
-                      title={`Log DNS for ${selectedTimestamp}`}
+                      title={`Log Access for ${selectedTimestamp}`}
                       visible={isLogModalVisibleAccess}
                       onCancel={() => setIsLogModalVisibleAccess(false)}
                       footer={null}
@@ -876,7 +930,10 @@ const Dashboard = () => {
                       height={1000}
                     >
                       <Table
-                        dataSource={filteredLogs}
+                        dataSource={filteredLogs.map((item: any) => ({
+                          ...item,
+                          rowClassName: item.label === 'Anomaly' ? 'anomaly-row' : '',
+                        }))}
                         columns={columns}
                         rowKey="id"
                       pagination={{
@@ -892,15 +949,20 @@ const Dashboard = () => {
                           cell: ResizableTitle,
                         },
                       }}
-                      rowClassName={(record:LogRecord) => (record?.Anomaly === 'Anomaly' ? 'anomaly-row' : '')}
+                      rowClassName={(record) => (record.Anomaly === 'Anomaly' ? 'anomaly-row' : '')}
                       className="custom-table"
                       />
                     </Modal>
                 <Row gutter={[20, 20]} className="chart-row">
                   <Col span={12}>  
-                  <h2>m3access</h2>              
+                  <h2>Top Frequent Values in Client_IP</h2>  
+                  <div style={{ marginBottom: '10px' }}>
+                      <Button onClick={() => handleTopXm4Change(barChartDatam4,3)}>Top 3</Button>
+                      <Button onClick={() => handleTopXm4Change(barChartDatam4,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button onClick={() => handleTopXm4Change(barChartDatam4,10)} style={{ marginLeft: 8 }}>Top 10</Button>
+                    </div>              
                     <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={barChartDatam4}>
+                      <BarChart data={barChartDatam4TopX.length > 0 ? barChartDatam4TopX : barChartDatam4}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
                         <YAxis />
@@ -916,9 +978,14 @@ const Dashboard = () => {
                     </ResponsiveContainer>            
                   </Col>
                   <Col span={12}>
-                  <h2>m4access</h2>
+                  <h2>Histogram Of Filtered Data</h2>
+                  <div style={{ marginBottom: '10px' }}>
+                      <Button onClick={() => handleTopXm5Change(barChartDatam5,3)}>Top 3</Button>
+                      <Button onClick={() => handleTopXm5Change(barChartDatam5,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button onClick={() => handleTopXm5Change(barChartDatam5,10)} style={{ marginLeft: 8 }}>Top 10</Button>
+                    </div>  
                     <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={barChartDatam5}>
+                      <BarChart data={barChartDatam5TopX.length > 0 ? barChartDatam5TopX : barChartDatam5}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
                         <YAxis />
@@ -935,9 +1002,14 @@ const Dashboard = () => {
                 </Row>
                 <Row gutter={[20, 20]} className="chart-row">
                 <Col span={12}>  
-                  <h2>m5access</h2>              
+                  <h2>HTTP Methods by Status Code</h2>
+                  <div style={{ marginBottom: '10px' }}>
+                      <Button onClick={() => handleTopXm6Change(barChartDatam6Access,3)}>Top 3</Button>
+                      <Button onClick={() => handleTopXm6Change(barChartDatam6Access,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button onClick={() => handleTopXm6Change(barChartDatam6Access,10)} style={{ marginLeft: 8 }}>Top 10</Button>
+                    </div>               
                   <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={barChartDatam6Access}>
+                    <BarChart data={barChartDatam6TopX.length > 0 ? barChartDatam6TopX : barChartDatam6Access}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="status_code" />
                       <YAxis />
@@ -950,7 +1022,7 @@ const Dashboard = () => {
                   </ResponsiveContainer>               
                 </Col>
                 <Col span={12}>
-                  <h2>m6access</h2>
+                  <h2>User_Agent</h2>
                   <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', marginTop: '20px' }}>
                     <thead>
                       <tr>
@@ -971,7 +1043,7 @@ const Dashboard = () => {
                 </Row>
                 <Row gutter={[20, 20]} className="chart-row">
                   <Col span={8}>  
-                  <h2>m7access</h2>              
+                  <h2>Distribution of Status_Code</h2>              
                   <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
                           <Pie
@@ -992,7 +1064,7 @@ const Dashboard = () => {
                       </ResponsiveContainer>           
                   </Col>
                   <Col span={8}>
-                  <h2>m8access</h2>
+                  <h2>Distribution of Version</h2>
                   <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
                           <Pie
@@ -1013,7 +1085,7 @@ const Dashboard = () => {
                       </ResponsiveContainer>
                   </Col>
                   <Col span={8}>
-                  <h2>m9access</h2>
+                  <h2>Distribution of Version</h2>
                   <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
                           <Pie
@@ -1038,7 +1110,6 @@ const Dashboard = () => {
               )}
               </div>
             )}
-  
 
           {viewType === "Table" && (
             <div>
@@ -1142,7 +1213,10 @@ const Dashboard = () => {
       >
         {/* Hiển thị bảng traffic trong modal */}
         <Table
-          dataSource={trafficData}
+          dataSource={trafficData.map((item: any) => ({
+            ...item,
+            rowClassName: item.labl === 'Anomaly' ? 'anomaly-row' : '',
+          }))}
           columns={TrafficColumns}
           pagination={{
             pageSize: 10,
@@ -1153,7 +1227,7 @@ const Dashboard = () => {
           }}
           loading={loading} // Hiển thị loading khi đang chờ dữ liệu
           rowKey="id" // Đặt rowKey nếu dữ liệu có ID
-          rowClassName={(TrafficColumns:any) => (TrafficColumns.Label === 'Anomaly' ? 'anomaly-row' : '')}
+          rowClassName={(TrafficColumns) => (TrafficColumns.Label === 'Anomaly' ? 'anomaly-row' : '')}
           className="custom-table"
         />
       </Modal>

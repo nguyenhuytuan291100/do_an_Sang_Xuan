@@ -44,7 +44,7 @@ const Dashboard = () => {
 
   const { id } = useParams();
   const [viewType, setViewType] = useState("Map");
-  const [activeTabKey, setActiveTabKey] = useState("1");
+  const [activeTabKey, setActiveTabKey] = useState("2");
 
   // M1
   const [tableDatam1, setTableDatam1] = useState([]);
@@ -398,7 +398,7 @@ const Dashboard = () => {
   interface TrafficRecord {
     Timestamp: string; // hoặc Date, tùy vào định dạng
     id: string; // nếu có thêm id hoặc các thuộc tính khác
-    payload: string;
+    Payload: string;
     [key: string]: any;
   }
   interface LogRecord {
@@ -434,7 +434,7 @@ const Dashboard = () => {
 
   //show Payload
   const showModalPaylaod = (record: TrafficRecord) => {
-    setModalContent(record.payload); // Lấy payload từ record và lưu vào state
+    setModalContent(record.Payload); // Lấy payload từ record và lưu vào state
     setIsModalVisiblePayload(true); // Hiển thị modal
   };
   const handleOk = () => {
@@ -560,10 +560,10 @@ const Dashboard = () => {
             {viewType === "Map" && (
               <Col span={16}>
                 <Tabs activeKey={activeTabKey} onChange={handleTabChange} centered>
-                  <TabPane tab="Network" key="1" />
                   <TabPane tab="Time analysis" key="2" />
                   <TabPane tab="Artifacts" key="3" />
                   <TabPane tab="Communications" key="4" />
+                  <TabPane tab="Network" key="1" />
                 </Tabs>
               </Col>
             )}
@@ -573,6 +573,7 @@ const Dashboard = () => {
             <div>
               {activeTabKey === "1" && (
                 <div>
+                  <h1>Network Graph</h1>
                   <div ref={networkRef} style={{ height: '400px', marginBottom: '20px', border: '1px solid lightgray' }} />
                   <Row>
                    </Row>
@@ -642,7 +643,10 @@ const Dashboard = () => {
                     width={1500}
                   >
                     <Table
-                      dataSource={filteredTraffics}
+                      dataSource={filteredTraffics.map((item: any) => ({
+                        ...item,
+                        rowClassName: item.labl === 'Anomaly' ? 'anomaly-row' : '',
+                      }))}
                       columns={columns}
                       rowKey="id"
                       pagination={{
@@ -658,7 +662,7 @@ const Dashboard = () => {
                           cell: ResizableTitle,
                         },
                       }}
-                      rowClassName={(record:any) => (record.Label === 'Anomaly' ? 'anomaly-row' : '')}
+                      rowClassName={(record) => (record.Label === 'Anomaly' ? 'anomaly-row' : '')}
                       className="custom-table"
                     />
                   </Modal>
@@ -1084,7 +1088,10 @@ const Dashboard = () => {
               </h2>
         {/* Hiển thị bảng traffic trong modal */}
         <Table
-          dataSource={logData}
+          dataSource={logData.map((item: any) => ({
+                  ...item,
+                  rowClassName: item.label === 'Anomaly' ? 'anomaly-row' : '',
+                }))}
           columns={columnsLog}
           pagination={{
             pageSize: 10,
@@ -1096,7 +1103,7 @@ const Dashboard = () => {
           scroll={{x:1000}}
           loading={loading} // Hiển thị loading khi đang chờ dữ liệu
           rowKey="id" // Đặt rowKey nếu dữ liệu có ID
-          rowClassName={(record:LogRecord) => record.Anomaly === 'Anomaly' ? 'anomaly-row' : ''}
+          rowClassName={(record) => record.Anomaly === 'Anomaly' ? 'anomaly-row' : ''}
         />
       </Modal>
 
