@@ -24,7 +24,9 @@
         cursor: pointer;
         
       }
-      // overflow-x: scroll;
+      .anomaly-row {
+        background-color: #ffcccc !important;
+      }
     }
 
     .anomaly-row {

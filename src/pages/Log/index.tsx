@@ -256,12 +256,55 @@ const Dashboard = () => {
       setActiveTabKey('4');
     }
   }, [log_type]);
+//link log timestamp anomaly
+  const [isLogModalVisible, setIsLogModalVisible] = useState(false);  // Quản lý trạng thái modal
+  const [isLogModalVisibleAudit, setIsLogModalVisibleAudit] = useState(false);  // Quản lý trạng thái modal
+  const [isLogModalVisibleAccess, setIsLogModalVisibleAccess] = useState(false);  // Quản lý trạng thái modal
+
+  const [selectedTimestamp, setSelectedTimestamp] = useState(null);  // Quản lý thời gian đã chọn
+  const [filteredLogs, setFilteredLogs] = useState([]);  // Lưu trữ dữ liệu log đã lọc
+  const handleDotClick = (timestamp:any) => {
+    // Chuyển đổi timestamp thành dạng chuỗi để tìm kiếm
+    const logsForTimestamp = tableDatam1.filter((log:any) => {
+      // Kiểm tra xem timestamp của log có chứa chuỗi timestamp đã chọn không (tìm kiếm gần đúng)
+      return log.Timestamp.includes(timestamp);
+    });
+  
+    setSelectedTimestamp(timestamp);
+    setFilteredLogs(logsForTimestamp);
+    setIsLogModalVisible(true);  // Mở modal
+  };
+  const handleDotClickAudit = (timestamp:any) => {
+    // Chuyển đổi timestamp thành dạng chuỗi để tìm kiếm
+    const logsForTimestamp = tableDatam1.filter((log:any) => {
+      // Kiểm tra xem timestamp của log có chứa chuỗi timestamp đã chọn không (tìm kiếm gần đúng)
+      return log.Timestamp.includes(timestamp);
+    });
+  
+    setSelectedTimestamp(timestamp);
+    setFilteredLogs(logsForTimestamp);
+    setIsLogModalVisibleAudit(true);  // Mở modal
+  };
+  const handleDotClickAccess = (timestamp:any) => {
+    // Chuyển đổi timestamp thành dạng chuỗi để tìm kiếm
+    const logsForTimestamp = tableDatam1.filter((log:any) => {
+      // Kiểm tra xem timestamp của log có chứa chuỗi timestamp đã chọn không (tìm kiếm gần đúng)
+      return log.Timestamp.includes(timestamp);
+    });
+  
+    setSelectedTimestamp(timestamp);
+    setFilteredLogs(logsForTimestamp);
+    setIsLogModalVisibleAccess(true);  // Mở modal
+  };
 
 
   //link traffic
   interface LogRecord {
     Timestamp: string; // hoặc Date, tùy vào định dạng
     id: string; // nếu có thêm id hoặc các thuộc tính khác
+    Anomaly?: string;  // Thuộc tính Anomaly có thể là string hoặc undefined
+      // Thêm các thuộc tính khác nếu cần
+
     [key: string]: any;
   }
 
@@ -488,7 +531,14 @@ const Dashboard = () => {
                             dot={(dataPoint) => {
                               const { cx, cy } = dataPoint;  // Lấy giá trị cx và cy từ dataPoint
                               return anomalyTimestamps.includes(dataPoint.payload.name) ? (
-                                <circle cx={cx} cy={cy} r={8} fill="red" />  // Định nghĩa vị trí của chấm dựa trên cx, cy
+                                <circle
+                                    cx={cx}
+                                    cy={cy}
+                                    r={8}
+                                    fill="red"
+                                    onClick={() => handleDotClick(dataPoint.payload.name)}  // Thêm sự kiện onClick
+                                    style={{ cursor: 'pointer' }}
+                                  />  // Định nghĩa vị trí của chấm dựa trên cx, cy
                               ) : (
                                 <circle cx={cx} cy={cy} r={4} fill="#8884d8" />
                               );
@@ -498,6 +548,37 @@ const Dashboard = () => {
                       </ResponsiveContainer>
                     </Col>
                   </Row>
+                  <Modal
+                      title={`Log DNS for ${selectedTimestamp}`}
+                      visible={isLogModalVisible}
+                      onCancel={() => setIsLogModalVisible(false)}
+                      footer={null}
+                      width={1300}
+                      height={1000}
+                    >
+                      <Table
+                        dataSource={filteredLogs}
+                        columns={columns}
+                        rowKey="id"
+                      pagination={{
+                        pageSize: 10,
+                        showSizeChanger: false,
+                        position: ['bottomRight'],
+                        prevIcon: <Button>«</Button>,
+                        nextIcon: <Button>»</Button>,
+                      }}
+                      scroll={{x:1000,y:1000}}
+                      components={{
+                        header: {
+                          cell: ResizableTitle,
+                        },
+                      }}
+                      rowClassName={(record:LogRecord) => (record?.Anomaly === 'Anomaly' ? 'anomaly-row' : '')}
+                      className="custom-table"
+                      />
+                    </Modal>
+
+
                   <Row gutter={[20, 20]} className="chart-row">
                     <Col span={12}>  
                     <h2>Top 10 Source IPs by Number of DNS Events</h2>              
@@ -572,7 +653,14 @@ const Dashboard = () => {
                             dot={(dataPoint) => {
                               const { cx, cy } = dataPoint;  // Lấy giá trị cx và cy từ dataPoint
                               return anomalyTimestamps.includes(dataPoint.payload.name) ? (
-                                <circle cx={cx} cy={cy} r={8} fill="red" />  // Định nghĩa vị trí của chấm dựa trên cx, cy
+                                <circle
+                                    cx={cx}
+                                    cy={cy}
+                                    r={8}
+                                    fill="red"
+                                    onClick={() => handleDotClickAudit(dataPoint.payload.name)}  // Thêm sự kiện onClick
+                                    style={{ cursor: 'pointer' }}
+                                  />  // Định nghĩa vị trí của chấm dựa trên cx, cy
                               ) : (
                                 <circle cx={cx} cy={cy} r={4} fill="#8884d8" />
                               );
@@ -582,6 +670,35 @@ const Dashboard = () => {
                     </ResponsiveContainer>
                   </Col>
                 </Row>
+                <Modal
+                      title={`Log DNS for ${selectedTimestamp}`}
+                      visible={isLogModalVisibleAudit}
+                      onCancel={() => setIsLogModalVisibleAudit(false)}
+                      footer={null}
+                      width={1300}
+                      height={1000}
+                    >
+                      <Table
+                        dataSource={filteredLogs}
+                        columns={columns}
+                        rowKey="id"
+                      pagination={{
+                        pageSize: 10,
+                        showSizeChanger: false,
+                        position: ['bottomRight'],
+                        prevIcon: <Button>«</Button>,
+                        nextIcon: <Button>»</Button>,
+                      }}
+                      scroll={{x:1000,y:1000}}
+                      components={{
+                        header: {
+                          cell: ResizableTitle,
+                        },
+                      }}
+                      rowClassName={(record:LogRecord) => (record?.Anomaly === 'Anomaly' ? 'anomaly-row' : '')}
+                      className="custom-table"
+                      />
+                    </Modal>
                 <Row gutter={[20, 20]} className="chart-row">
                   <Col span={12}>  
                   <h2>m3.1audit</h2>              
@@ -733,7 +850,14 @@ const Dashboard = () => {
                             dot={(dataPoint) => {
                               const { cx, cy } = dataPoint;  // Lấy giá trị cx và cy từ dataPoint
                               return anomalyTimestamps.includes(dataPoint.payload.name) ? (
-                                <circle cx={cx} cy={cy} r={8} fill="red" />  // Định nghĩa vị trí của chấm dựa trên cx, cy
+                                <circle
+                                    cx={cx}
+                                    cy={cy}
+                                    r={8}
+                                    fill="red"
+                                    onClick={() => handleDotClickAccess(dataPoint.payload.name)}  // Thêm sự kiện onClick
+                                    style={{ cursor: 'pointer' }}
+                                  />  // Định nghĩa vị trí của chấm dựa trên cx, cy
                               ) : (
                                 <circle cx={cx} cy={cy} r={4} fill="#8884d8" />
                               );
@@ -743,6 +867,35 @@ const Dashboard = () => {
                     </ResponsiveContainer>
                   </Col>
                 </Row>
+                <Modal
+                      title={`Log DNS for ${selectedTimestamp}`}
+                      visible={isLogModalVisibleAccess}
+                      onCancel={() => setIsLogModalVisibleAccess(false)}
+                      footer={null}
+                      width={1300}
+                      height={1000}
+                    >
+                      <Table
+                        dataSource={filteredLogs}
+                        columns={columns}
+                        rowKey="id"
+                      pagination={{
+                        pageSize: 10,
+                        showSizeChanger: false,
+                        position: ['bottomRight'],
+                        prevIcon: <Button>«</Button>,
+                        nextIcon: <Button>»</Button>,
+                      }}
+                      scroll={{x:1000,y:1000}}
+                      components={{
+                        header: {
+                          cell: ResizableTitle,
+                        },
+                      }}
+                      rowClassName={(record:LogRecord) => (record?.Anomaly === 'Anomaly' ? 'anomaly-row' : '')}
+                      className="custom-table"
+                      />
+                    </Modal>
                 <Row gutter={[20, 20]} className="chart-row">
                   <Col span={12}>  
                   <h2>m3access</h2>              

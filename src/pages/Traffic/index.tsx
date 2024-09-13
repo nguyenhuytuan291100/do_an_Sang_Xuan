@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Button, Col, Row, Tabs, Card, Tooltip,Table, Input, Select, Menu } from "antd";
+import { Button, Col, Row, Tabs, Card, Tooltip,Table, Input, Select, Menu, Space  } from "antd";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { Network, DataSet, Node, Edge } from "vis-network/standalone/esm/vis-network";
 import './styles.scss'; // Import file SCSS
@@ -111,6 +111,9 @@ const Dashboard = () => {
 // M20
   const [dataM20, setDataM20] = useState([]);
 
+  //Anomaly
+  const [anomalyTimestamps, setAnomalyTimestamps] = useState<string[]>([]);
+
   const [columns, setColumns] = useState([
     { title: 'Flow ID', dataIndex: 'Flow ID', key: 'flowID', width: 100 },
     { title: 'Timestamp', dataIndex: 'Timestamp', key: 'timestamp', width: 150 },
@@ -129,6 +132,7 @@ const Dashboard = () => {
     { title: 'Tot Pkts', dataIndex: 'Tot Pkts', key: 'totPkts', width: 100 },
     { title: 'Label', dataIndex: 'Label', key: 'labl', width: 80 },
   ]);
+
   
   const handleResize = (index: number) => (e: any, { size }: any) => {
     const nextColumns = [...columns];
@@ -250,7 +254,10 @@ const Dashboard = () => {
       setLineChartDatam19(res['m19']); // Giả sử dữ liệu bar chart nằm ở phần thứ 5
 
       setDataM20(res['m20']);
-      console.log(res['m20'])
+
+      setAnomalyTimestamps(res['m21'])
+
+      console.log(res['m21'])
     }).catch((error) => {
       console.error("Error fetching traffic data:", error);
     });
@@ -281,6 +288,23 @@ const Dashboard = () => {
       new Network(container, data, options);
     }
   }, [activeTabKey, nodes, edges]);
+
+//Link anomaly Traffic timestamp
+  const [isTrafficModalVisible, setIsTrafficModalVisible] = useState(false);  // Quản lý trạng thái modal
+  const [selectedTimestamp, setSelectedTimestamp] = useState(null);  // Quản lý thời gian đã chọn
+  const [filteredTraffics, setFilteredTraffics] = useState([]);  // Lưu trữ dữ liệu log đã lọc
+
+  const handleDotClick = (timestamp: any) => {
+    // Lọc log traffic tương ứng với thời gian
+    const logsForTimestamp = tableDatam1.filter((log:any) => {
+      // Kiểm tra xem timestamp của log có chứa chuỗi timestamp đã chọn không (tìm kiếm gần đúng)
+      return log.Timestamp.includes(timestamp);
+    });
+  
+    setSelectedTimestamp(timestamp);
+    setFilteredTraffics(logsForTimestamp);
+    setIsTrafficModalVisible(true);  // Mở modal
+  };
 
 
   //Link Log data
@@ -343,6 +367,7 @@ const Dashboard = () => {
   interface TrafficRecord {
     Timestamp: string; // hoặc Date, tùy vào định dạng
     id: string; // nếu có thêm id hoặc các thuộc tính khác
+    payload: string;
     [key: string]: any;
   }
   interface LogRecord {
@@ -353,6 +378,8 @@ const Dashboard = () => {
   // const navigate = useNavigate();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isModalVisible1, setIsModalVisible1] = useState(false);
+  const [isModalVisiblePayload, setIsModalVisiblePayload] = useState(false);
+  const [modalContent, setModalContent] = useState<string | null>(null);
   const [selectedTraficRecord, setSelectedTrafficRecord] = useState<TrafficRecord | null>(null);
   const [logFiles, setlogFiles] = useState<string[]>([]);  // Trạng thái để lưu trữ các tệp đã tải lên cho Traffic
   const [logData, setLogData] = useState([]);
@@ -372,6 +399,19 @@ const Dashboard = () => {
   };
   const showModal1 = async (state:any) => {
     setIsModalVisible1(state);
+  };
+
+  //show Payload
+  const showModalPaylaod = (record: TrafficRecord) => {
+    setModalContent(record.payload); // Lấy payload từ record và lưu vào state
+    setIsModalVisiblePayload(true); // Hiển thị modal
+  };
+  const handleOk = () => {
+    setIsModalVisiblePayload(false); // Đóng modal khi nhấn OK
+  };
+
+  const handleCancelPayload = () => {
+    setIsModalVisiblePayload(false); // Đóng modal khi nhấn Cancel
   };
 
   const handleOnClickTraffic = async (logid: any)=>{
@@ -458,11 +498,19 @@ const Dashboard = () => {
     const actionColumn = {
       title: 'Hành động',
       key: 'action',
-      width: 150,
+      width: 200, // Tăng kích thước cột nếu cần để chứa cả 2 nút
       render: (text: any, record: TrafficRecord) => (
-        <Button type="primary" onClick={() => showModal(record)}>
-          Tìm kiếm Log
-        </Button>
+        <Space size="middle">
+          {/* Nút Tìm kiếm Log */}
+          <Button type="primary" onClick={() => showModal(record)}>
+            Tìm kiếm Log
+          </Button>
+          
+          {/* Nút Payload */}
+          <Button type="default" onClick={() => showModalPaylaod(record)}>
+            Payload
+          </Button>
+        </Space>
       ),
     };
   
@@ -497,11 +545,7 @@ const Dashboard = () => {
                 <div>
                   <div ref={networkRef} style={{ height: '400px', marginBottom: '20px', border: '1px solid lightgray' }} />
                   <Row>
-                  <div>
-                    <h1>Network Flow Chart</h1>
-                    <FlowChart/>
-                  </div>
-                  </Row>
+                   </Row>
                   <Row >
                     <Col span={24}><div >
                     <h1>Network Map</h1>
@@ -535,11 +579,59 @@ const Dashboard = () => {
                           <YAxis />
                           <RechartsTooltip />
                           <Legend />
-                          <Line type="monotone" dataKey="pv" stroke="#8884d8" />
+                          <Line
+                            type="monotone"
+                            dataKey="pv"
+                            stroke="#8884d8"
+                            dot={(dataPoint) => {
+                              const { cx, cy } = dataPoint;  
+                              return anomalyTimestamps?.includes(dataPoint.payload.name) ? (
+                                <circle
+                                  cx={cx}
+                                  cy={cy}
+                                  r={8}
+                                  fill="red"
+                                  onClick={() => handleDotClick(dataPoint.payload.name)}  // Thêm sự kiện onClick
+                                  style={{ cursor: 'pointer' }}
+                                />
+                              ) : (
+                                <circle cx={cx} cy={cy} r={4} fill="#8884d8" />
+                              );
+                            }}
+                          />
                         </LineChart>
                       </ResponsiveContainer>
                     </Col>
                   </Row>
+                  {/* Modal hiển thị log traffic tương ứng */}
+                  <Modal
+                    title={`Log Traffic for ${selectedTimestamp}`}
+                    visible={isTrafficModalVisible}
+                    onCancel={() => setIsTrafficModalVisible(false)}
+                    footer={null}
+                    width={1500}
+                  >
+                    <Table
+                      dataSource={filteredTraffics}
+                      columns={columns}
+                      rowKey="id"
+                      pagination={{
+                        pageSize: 10,
+                        showSizeChanger: false,
+                        position: ['bottomRight'],
+                        prevIcon: <Button>«</Button>,
+                        nextIcon: <Button>»</Button>,
+                      }}
+                      scroll={{x:1000,y:1000}}
+                      components={{
+                        header: {
+                          cell: ResizableTitle,
+                        },
+                      }}
+                      rowClassName={(record:any) => (record.Label === 'Anomaly' ? 'anomaly-row' : '')}
+                      className="custom-table"
+                    />
+                  </Modal>
                   <Row gutter={[24, 24]} className="chart-row">
                     <Col span={23}>
                       <h2>Bytes for Time</h2>
@@ -958,6 +1050,16 @@ const Dashboard = () => {
           rowKey="id" // Đặt rowKey nếu dữ liệu có ID
           rowClassName={(record:LogRecord) => record.Anomaly === 'Anomaly' ? 'anomaly-row' : ''}
         />
+      </Modal>
+
+      {/* Modal sẽ hiển thị khi nhấn vào nút 'Payload' */}
+      <Modal
+        title="Payload Data"
+        visible={isModalVisiblePayload}
+        onOk={handleOk}
+        onCancel={handleCancelPayload}
+      >
+        <p>{modalContent}</p> {/* Hiển thị dữ liệu payload trong modal */}
       </Modal>
         </div>
       </div>
