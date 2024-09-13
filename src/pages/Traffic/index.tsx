@@ -42,14 +42,6 @@ const COLORS = [
 
 const Dashboard = () => {
 
-  const flowData = [
-    { sourceIP: '10.10.10.10', destinationIP: '8.8.8.8', time: '4:35:40 PM' },
-    { sourceIP: '192.168.88.1', destinationIP: '10.10.10.30', time: '4:35:50 PM' },
-    { sourceIP: '10.10.10.30', destinationIP: '192.168.88.1', time: '4:35:55 PM' }, // Chiều ngược lại
-    { sourceIP: '192.168.88.52', destinationIP: '192.168.89.2', time: '4:36:12 PM' },
-    { sourceIP: '10.10.10.10', destinationIP: '8.8.8.8', time: '4:36:14 PM' },
-  ];
-
   const { id } = useParams();
   const [viewType, setViewType] = useState("Map");
   const [activeTabKey, setActiveTabKey] = useState("1");
@@ -152,33 +144,73 @@ const Dashboard = () => {
   }));
 
    // Hàm xử lý tìm kiếm
+
+  const [selectedValue, setSelectedValue] = useState(null); // State để lưu giá trị đã chọn từ dropdown
+  const [uniqueFieldValues, setUniqueFieldValues] = useState([]); // State để lưu các giá trị không trùng lặp của trường đã chọn
+
   const handleSearch = (e:any) => {
     setSearchText(e.target.value);
   };
 
-  const handleFieldChange = (value:any) => {
-    setSelectedField(value);
+  const handleFieldChange = (field:any) => {
+    setSelectedField(field);
+  
+    // Lấy tất cả các giá trị của trường được chọn và lọc ra các giá trị không trùng lặp
+    if (field) {
+      const values = tableDatam1.map((item) => item[field]);
+      const uniqueValues = [...new Set(values)];
+      setUniqueFieldValues(uniqueValues); // Cập nhật dropdown giá trị
+    } else {
+      setUniqueFieldValues([]);
+      setSelectedValue(null);
+    }
+  };
+  const handleValueChange = (value:any) => {
+    setSelectedValue(value); // Cập nhật giá trị đã chọn
   };
 
   const filteredData = tableDatam1.filter((item) => {
-    if (!selectedField || selectedField === "All Fields") {
-      return Object.values(item).some((val) => {
-        if (val !== undefined && val !== null) {
-          // Chỉ chuyển đổi nếu val là chuỗi hoặc số
-          const valueStr = typeof val === 'string' || typeof val === 'number' ? String(val) : '';
-          return valueStr.toLowerCase().includes(searchText.toLowerCase());
-        }
-        return false;
-      });
-    } else {
-      const selectedValue = item[selectedField];
-      if (selectedValue !== undefined && selectedValue !== null) {
-        const valueStr = typeof selectedValue === 'string' || typeof selectedValue === 'number' ? String(selectedValue) : '';
+    // Trường hợp 1: Chọn cả trường và giá trị
+    if (selectedField && selectedValue) {
+      const selectedFieldValue = item[selectedField];
+      // Kiểm tra nếu giá trị của trường được chọn khớp với giá trị trong dropdown value
+      if (selectedFieldValue !== undefined && selectedFieldValue !== null) {
+        return selectedFieldValue === selectedValue;
+      }
+      return false;
+    }
+  
+    // Trường hợp 2: Chỉ chọn trường (không chọn giá trị trong dropdown value)
+    if (selectedField && !selectedValue) {
+      // Tìm kiếm theo trường được chọn và từ khóa trong thanh search
+      const selectedFieldValue = item[selectedField];
+      if (selectedFieldValue !== undefined && selectedFieldValue !== null) {
+        const valueStr = typeof selectedFieldValue === 'string' || typeof selectedFieldValue === 'number' ? String(selectedFieldValue) : '';
         return valueStr.toLowerCase().includes(searchText.toLowerCase());
       }
       return false;
     }
+  
+    // Trường hợp 3: Không chọn gì trong dropdown, chỉ tìm theo thanh search
+    if (!selectedField || selectedField === "All Fields") {
+      if (searchText) {
+        return Object.values(item).some((val) => {
+          if (val !== undefined && val !== null) {
+            // Chỉ chuyển đổi nếu val là chuỗi hoặc số
+            const valueStr = typeof val === 'string' || typeof val === 'number' ? String(val) : '';
+            return valueStr.toLowerCase().includes(searchText.toLowerCase());
+          }
+          return false;
+        });
+      }
+      // Nếu không có gì trong thanh tìm kiếm, trả về toàn bộ dữ liệu
+      return true;
+    }
+  
+    // Mặc định trả về tất cả dữ liệu
+    return true;
   });
+  
   
   const networkRef = useRef<HTMLDivElement | null>(null);
 
@@ -306,7 +338,6 @@ const Dashboard = () => {
     setIsTrafficModalVisible(true);  // Mở modal
   };
 
-
   //Link Log data
 
   const [log_type, setLogType] = useState('');
@@ -422,8 +453,7 @@ const Dashboard = () => {
     // Thay '/' bằng '-' và khoảng trắng ' ' bằng 'T' để có định dạng chuẩn ISO
     return timestamp.replace(/\//g, '-').replace(' ', 'T');
   };
-  
-  
+   
   const compareTimestamps = (logTimestamp: string, trafficTimestamp: string) => {
     let logDate, trafficDate;
   
@@ -595,7 +625,7 @@ const Dashboard = () => {
                                   style={{ cursor: 'pointer' }}
                                 />
                               ) : (
-                                <circle cx={cx} cy={cy} r={4} fill="#8884d8" />
+                                <circle onClick={() => handleDotClick(dataPoint.payload.name)} cx={cx} cy={cy} r={8} fill="#8884d8" />
                               );
                             }}
                           />
@@ -966,6 +996,23 @@ const Dashboard = () => {
                       </Select.Option>
                     ))}
                   </Select>
+                  {/* select giá trị của trường */}
+                  <Select
+                    style={{ width: '30%', marginRight: '8px' }}
+                    placeholder="Select a value"
+                    value={selectedValue}
+                    onChange={handleValueChange}
+                    allowClear
+                    disabled={!selectedField}
+                  >
+                    <Select.Option value="">-- No Filter --</Select.Option> {/* Giá trị rỗng để cho phép tìm kiếm */}
+                    {uniqueFieldValues.map((value) => (
+                      <Select.Option key={value} value={value}>
+                        {value}
+                      </Select.Option>
+                    ))}
+                  </Select>
+
                   <Button 
                     type="primary" 
                     icon={<SearchOutlined />} 
@@ -1025,6 +1072,7 @@ const Dashboard = () => {
         title="Log Data"
         visible={isModalVisible1}
         onCancel={handleCancel1}
+        onOk={handleCancel1}
          // Không có footer
         width={2000}
 // Đặt kích thước modal
