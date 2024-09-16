@@ -40,10 +40,12 @@ const SideBar: React.FC<Props> = ({ collapsed, setCollapsed }) => {
 
   useEffect(()=>{
     gettraffic().then((res)=>{
-      setTrafficFiles(res)
+      setTrafficFiles(res);
+      console.log(trafficFiles);
     });
     getlog().then((log)=>{
-      setLogFiles(log)
+      setLogFiles(log);
+      console.log(logFiles);
     })
   },[])
   

@@ -1,13 +1,11 @@
 import { useState, useEffect, useLayoutEffect } from "react";
-import { Button, Col, Row, Tabs, Table, Input, Select , Menu } from "antd";
-
+import { Button, Col, Row, Tabs, Table, Input, Select , Menu,Card,Tooltip } from "antd";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Label} from "recharts";
 import './styles.scss'; // Import file SCSS
 import { useParams } from "react-router-dom";
 import { getlogByID } from "services/apiService";
 import ResizableTitle from "pages/App/subcomponents/MainLayout/subcomponents/ResiableTitle";
 import { SearchOutlined, FilterOutlined } from '@ant-design/icons';
-
 import { Modal } from 'antd';
 import { gettraffic, gettrafficById} from '../../services/apiService';
 
@@ -43,9 +41,7 @@ const stackedbarchartdata = [
 ];
 // Create an array to store unique methods
 const allMethods = Array.from(new Set(stackedbarchartdata.flatMap(entry => entry.methods.map(item => item.method))));
-
 const { TabPane } = Tabs;
-
 // Array to store colors for charts
 const COLORS = [
   '#0088FE', // Bright Blue
@@ -75,16 +71,13 @@ const Dashboard = () => {
   const { id } = useParams();
   const [viewType, setViewType] = useState("Map");
   const [activeTabKey, setActiveTabKey] = useState('');
-
   // State for storing data for each chart/table
   const [log_type, setLogType] = useState('');
   const [tableDatam1, setTableDatam1] = useState([]);
   const [searchText, setSearchText] = useState('');
   const [selectedField, setSelectedField] = useState('');
-
   // M2
   const [barChartDatam2, setBarChartDatam2] = useState([]);
-
   // M3
   const [lineChartDatam3, setLineChartDatam3] = useState([]);
   //M4
@@ -93,20 +86,21 @@ const Dashboard = () => {
   const [barChartDatam5, setBarChartDatam5] = useState([]);
   //M6 Access
   const [barChartDatam6Access, setBarChartDatam6Access] = useState([]);
-
   const [barChartDatam7Access, setBarChartDatam7Acsess] = useState([]);
   const [PieChartData8Access, setPieChartData8Access] = useState([]);
   const [PieChartData9Access, setPieChartData9Access] = useState([]);
   const [PieChartData10Access, setPieChartData10Access] = useState([]);
-
   //M6 Audit
   const [barChartDatam6Audit, setBarChartDatam6Audit] = useState([]);
   const [barChartDatam7Audit, setBarChartDatam7Audit] = useState([]);
   const [barChartDatam8Audit, setBarChartDatam8Audit] = useState([]);
   const [PieChartData9Audit, setPieChartData9Audit] = useState([]);
-
-  //Anomaly
+  //Anomaly M11
   const [anomalyTimestamps, setAnomalyTimestamps] = useState<string[]>([]);
+  //M12
+  const [Data12, setData12] = useState([]);
+  //M13
+  const [Data13, setData13] = useState([]);
 
   const dnsColumns = [
     { title: 'Line ID', dataIndex: 'LineId', key: 'lineId', width: 80 },
@@ -116,7 +110,6 @@ const Dashboard = () => {
     { title: 'Event Template', dataIndex: 'EventTemplate', key: 'eventTemplate', width: 180 },
     { title: 'Label', dataIndex: 'Anomaly', key: 'label', width: 100 },
   ];
-
   const auditColumns = [
     { title: 'Line ID', dataIndex: 'LineId', key: 'lineId', width: 80 },
     { title: 'Type', dataIndex: 'Type', key: 'type', width: 100 },
@@ -134,7 +127,6 @@ const Dashboard = () => {
     { title: 'Event Classification', dataIndex: 'Event_Classification', key: 'eventClassification', width: 200 },
     { title: 'Label', dataIndex: 'Anomaly', key: 'label', width: 100 },
   ];
-
   const accessColumns = [
     { title: 'Line ID', dataIndex: 'LineId', key: 'lineId', width: 80 },
     { title: 'Client IP', dataIndex: 'Client_IP', key: 'clientIp', width: 150 },
@@ -153,24 +145,18 @@ const Dashboard = () => {
 
   if (log_type === 'dns') {
     columns = dnsColumns;
-
   } else if (log_type === 'audit') {
     columns = auditColumns;
-
   } else if (log_type === 'access') {
     columns = accessColumns;
-
   }
- 
   // Handle search input
   const handleSearch = (e: any) => {
     setSearchText(e.target.value);
   };
-
   const handleFieldChange = (value: any) => {
     setSelectedField(value);
   };
-
   const filteredData = tableDatam1.filter((item) => {
     if (!selectedField || selectedField === "All Fields") {
       return Object.values(item).some((val) => {
@@ -193,11 +179,9 @@ const Dashboard = () => {
   const toggleViewType = () => {
     setViewType((prevType) => (prevType === "Map" ? "Table" : "Map"));
   };
- 
   const handleTabChange = (key: string) => {
     setActiveTabKey(key);
   };
-
   useLayoutEffect(() => {
     getlogByID(id).then( async (res) =>{
       await setLogType(res['typeLog']);//ok
@@ -207,22 +191,23 @@ const Dashboard = () => {
       setLineChartDatam3(res['m3'])//ok
       setBarChartDatam4(res['m4']);
       setBarChartDatam5(res['m5']);
-
-      if(log_type === "audit"){
         //Audit
-        setBarChartDatam6Audit(res['m6']);
-        setBarChartDatam7Audit(res['m7']);
-        setBarChartDatam8Audit(res['m8']);
-        setPieChartData9Audit(res['m9']);
-      }else if(log_type === "access"){
-        //Access
-        setBarChartDatam6Access(res['m6'])
-        setBarChartDatam7Acsess(res['m7']);
-        setPieChartData8Access(res['m8']);
-        setPieChartData10Access(res['m10']);
-        setPieChartData9Access(res['m9']);
-      }
-      setAnomalyTimestamps(res['m11'])
+      setBarChartDatam6Audit(res['m6']);
+      setBarChartDatam7Audit(res['m7']);
+      setBarChartDatam8Audit(res['m8']);
+      setPieChartData9Audit(res['m9']);
+
+      //Access
+      setBarChartDatam6Access(res['m6'])
+      setBarChartDatam7Acsess(res['m7']);
+      setPieChartData8Access(res['m8']);
+      setPieChartData10Access(res['m10']);
+      setPieChartData9Access(res['m9']);
+
+      // setAnomalyTimestamps(res['m11'])
+      setAnomalyTimestamps(res['m11'] || []);
+      setData12(res['m12']);
+      setData13(res['m13']);
 
     }).catch((error) => {
       console.error("Error fetching log data:", error);
@@ -253,7 +238,6 @@ const Dashboard = () => {
       // Kiểm tra xem timestamp của log có chứa chuỗi timestamp đã chọn không (tìm kiếm gần đúng)
       return log.Timestamp.includes(timestamp);
     });
-  
     setSelectedTimestamp(timestamp);
     setFilteredLogs(logsForTimestamp);
     setIsLogModalVisible(true);  // Mở modal
@@ -293,14 +277,33 @@ const Dashboard = () => {
   };
 
   const [barChartDatam4TopX, setBarChartDatam4TopX] = useState<ChartData[]>([]);
-  // setBarChartDatam4TopX(barChartDatam4)
   const [barChartDatam5TopX, setBarChartDatam5TopX] = useState<ChartData[]>([]);
   const [barChartDatam6TopX, setBarChartDatam6TopX] = useState<ChartData[]>([]);
   const [barChartDatam7TopX, setBarChartDatam7TopX] = useState<ChartData[]>([]);
   const [barChartDatam8TopX, setBarChartDatam8TopX] = useState<ChartData[]>([]);
 
+  const columnsdata4 = [
+    { title: 'IP', dataIndex: 'name', key: 'name' },
+    { title: 'Count', dataIndex: 'uv', key: 'uv' },
+  ];
+  const columnsdata4Audit = [
+    { title: 'Event', dataIndex: 'name', key: 'name' },
+    { title: 'Count', dataIndex: 'uv', key: 'uv' },
+  ];
+  const columnsdata6Audit = [
+    { title: 'PID', dataIndex: 'name', key: 'name' },
+    { title: 'Count', dataIndex: 'uv', key: 'uv' },
+  ];
+  const [viewMode4, setViewMode4] = useState('table'); 
+  const [viewMode6, setViewMode6] = useState('table'); 
+
   const handleTopXm4Change = (data: ChartData[],topX: number) => {
     setBarChartDatam4TopX(getTopXData(data, topX));
+    if (topX ===0) {
+      setViewMode4('table'); // Chuyển sang chế độ bảng khi nhấn Top 10
+    } else {
+      setViewMode4('chart'); // Hiển thị biểu đồ cho Top 3 và Top 5
+    }
     // Trực tiếp cập nhật state với dữ liệu đã lọc mà không tạo biến trung gian
   };
   const handleTopXm5Change = (data: ChartData[],topX: number) => {
@@ -309,6 +312,11 @@ const Dashboard = () => {
   };
   const handleTopXm6Change = (data: ChartData[],topX: number) => {
     setBarChartDatam6TopX(getTopXData(data, topX));
+    if (topX ===0) {
+      setViewMode6('table'); // Chuyển sang chế độ bảng khi nhấn Top 10
+    } else {
+      setViewMode6('chart'); // Hiển thị biểu đồ cho Top 3 và Top 5
+    }
     // Trực tiếp cập nhật state với dữ liệu đã lọc mà không tạo biến trung gian
   };
   const handleTopXm7Change = (data: ChartData[],topX: number) => {
@@ -337,7 +345,7 @@ const Dashboard = () => {
   //LINK TRAFFIC FUNCTION
   useEffect(() => {
     gettraffic().then((res) => {
-      console.log(res); // Kiểm tra cấu trúc dữ liệu trả về
+      // console.log(res); // Kiểm tra cấu trúc dữ liệu trả về
       setTrafficFiles(res);
     });
   }, []);
@@ -350,10 +358,8 @@ const Dashboard = () => {
   const showModal1 = async (state:any) => {
     setIsModalVisible1(state);
   };
-
   const handleOnClickTraffic = async (trafficid: any)=>{
     handleTrafficFileSelect(trafficid)
-
   }
   const convertTimestampToComparableFormat = (timestamp: string) => {
     // Thay '/' bằng '-' và khoảng trắng ' ' bằng 'T' để có định dạng chuẩn ISO
@@ -382,30 +388,24 @@ const Dashboard = () => {
   };
   // Hàm xử lý khi chọn file traffic
   const handleTrafficFileSelect = async (trafficFile: any) => {
-    console.log(trafficFile);
-  
+    // console.log(trafficFile);
     try {
       const trafficDataSet = await gettrafficById(trafficFile); // Lấy dữ liệu traffic theo ID
-      console.log(trafficDataSet);
-      console.log(selectedLogRecord);
-  
+      // console.log(trafficDataSet);
+      // console.log(selectedLogRecord);
       setLoading(true); // Bắt đầu loading
-  
       if (selectedLogRecord && trafficDataSet) {
-        console.log(selectedLogRecord.Timestamp);
-  
+        // console.log(selectedLogRecord.Timestamp);
         // Lấy dữ liệu traffic từ trafficDataSet
         let trafficData = trafficDataSet['m1'];
         if (!trafficData || !trafficData.length) {
           console.error("No traffic data available");
           return;
         }
-  
         // Lọc trafficData theo khoảng thời gian 30 giây
         const filteredTrafficData = trafficData.filter((item: any) => 
           compareTimestamps(selectedLogRecord.Timestamp, item.Timestamp)
         );
-  
         setTrafficData(filteredTrafficData); // Lưu dữ liệu đã lọc
         showModal1(true); // Hiển thị modal
       } else {
@@ -504,6 +504,24 @@ const Dashboard = () => {
               {activeTabKey === "1" && (
                 <div>
                   <Row gutter={[24, 24]} className="chart-row">
+                  <Col span={12}>
+                      <Card style={{ background: "#1c1c1e", color: "#fff", height:'150px',marginBottom:'20px', marginTop:'20px' }}>
+                        <h3>Total Event</h3>
+                        <p>
+                          <Tooltip title="Total Event" placement="right">
+                            {/* {Data13[0]} events <i className="fas fa-info-circle"></i> */}
+                          </Tooltip>
+                        </p>
+                      </Card>
+                      <Card style={{ background: "#1c1c1e", color: "#fff", height: '150px' }}>
+                        <h3>Alert Event</h3>
+                        <p>
+                          <Tooltip title="Total Event" placement="right">
+                            {/* {Data13[1]} events <i className="fas fa-info-circle"></i> */}
+                          </Tooltip>
+                        </p>
+                      </Card>
+                    </Col>
                     <Col span={12}>
                     <h2>DNS Event</h2>
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', marginTop: '20px' }}>
@@ -521,22 +539,22 @@ const Dashboard = () => {
                         </tr>
                       ))}
                     </tbody>
-                  </table></Col>
-                    
+                  </table>
+                  </Col>
                     </Row>
                     <Row gutter={[40, 40]} className="chart-row">
                     <Col span={24}>
                       <h2>Total Number of DNS Events per Day/Hour</h2>
                       <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={lineChartDatam3}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
+                      <LineChart data={lineChartDatam3}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
                           <YAxis>
                             <Label value="Số sự kiện" angle={-90} position="insideLeft" />
                           </YAxis>
-                          <RechartsTooltip />
+                        <RechartsTooltip />
                           <Legend formatter={() => 'Thời gian'} />
-                          <Line
+                        <Line
                             type="monotone"
                             dataKey="pv"
                             stroke="#8884d8"
@@ -544,19 +562,19 @@ const Dashboard = () => {
                               const { cx, cy } = dataPoint;  // Lấy giá trị cx và cy từ dataPoint
                               return anomalyTimestamps.includes(dataPoint.payload.name) ? (
                                 <circle
-                                    cx={cx}
-                                    cy={cy}
-                                    r={8}
-                                    fill="red"
-                                    onClick={() => handleDotClick(dataPoint.payload.name)}  // Thêm sự kiện onClick
-                                    style={{ cursor: 'pointer' }}
+                                  cx={cx}
+                                  cy={cy}
+                                  r={8}
+                                  fill="red"
+                                  onClick={() => handleDotClick(dataPoint.payload.name)}  // Thêm sự kiện onClick
+                                  style={{ cursor: 'pointer' }}
                                   />  // Định nghĩa vị trí của chấm dựa trên cx, cy
                               ) : (
                                 <circle cx={cx} cy={cy} r={4} fill="#8884d8" />
                               );
                             }}
                           />
-                        </LineChart>
+                      </LineChart>
                       </ResponsiveContainer>
                     </Col>
                   </Row>
@@ -566,7 +584,6 @@ const Dashboard = () => {
                       onCancel={() => setIsLogModalVisible(false)}
                       footer={null}
                       width={1300}
-                      height={1000}
                     >
                       <Table
                         dataSource={filteredLogs.map((item: any) => ({
@@ -582,7 +599,7 @@ const Dashboard = () => {
                         prevIcon: <Button>«</Button>,
                         nextIcon: <Button>»</Button>,
                       }}
-                      scroll={{x:1000,y:1000}}
+                      scroll={{x:1000,y:500}}
                       components={{
                         header: {
                           cell: ResizableTitle,
@@ -592,8 +609,6 @@ const Dashboard = () => {
                       className="custom-table"
                       />
                     </Modal>
-
-
                   <Row gutter={[20, 20]} className="chart-row">
                     <Col span={12}>  
                     <h2>Top Source IPs by Number of DNS Events</h2>  
@@ -602,7 +617,7 @@ const Dashboard = () => {
                       <Button onClick={() => handleTopXm4Change(barChartDatam4,3)}>Top 3</Button>
                       <Button onClick={() => handleTopXm4Change(barChartDatam4,5)} style={{ marginLeft: 8 }}>Top 5</Button>
                       <Button onClick={() => handleTopXm4Change(barChartDatam4,10)} style={{ marginLeft: 8 }}>Top 10</Button>
-                    </div>            
+                    </div>{viewMode4 === 'chart' ? (            
                       <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={barChartDatam4TopX.length > 0 ? barChartDatam4TopX : barChartDatam4}>
                           <CartesianGrid strokeDasharray="3 3" />
@@ -616,7 +631,9 @@ const Dashboard = () => {
                             ))}
                           </Bar>
                         </BarChart>
-                      </ResponsiveContainer>
+                      </ResponsiveContainer>):(
+                        <Table dataSource={barChartDatam4} columns={columnsdata4} scroll={{y:200}} pagination={false} style={{ width: '100%', height: '300px' }}/>
+                      )}
                     </Col>
                     <Col span={12}>
                     <h2>Distribution of DNS Query Type</h2>
@@ -647,7 +664,7 @@ const Dashboard = () => {
                 <div>
                 <Row gutter={[24, 24]} className="chart-row">
                   <h2>Event Template</h2>
-                    <ResponsiveContainer width="100%" height={300}>
+                    <ResponsiveContainer width="97%" height={300}>
                       <BarChart data={barChartDatam2}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="EventTemplate" />
@@ -702,7 +719,6 @@ const Dashboard = () => {
                       onCancel={() => setIsLogModalVisibleAudit(false)}
                       footer={null}
                       width={1300}
-                      height={1000}
                     >
                       <Table
                         dataSource={filteredLogs.map((item: any) => ({
@@ -718,7 +734,7 @@ const Dashboard = () => {
                         prevIcon: <Button>«</Button>,
                         nextIcon: <Button>»</Button>,
                       }}
-                      scroll={{x:1000,y:1000}}
+                      scroll={{x:1000,y:500}}
                       components={{
                         header: {
                           cell: ResizableTitle,
@@ -734,8 +750,8 @@ const Dashboard = () => {
                   <div style={{ marginBottom: '10px' }}>
                       <Button onClick={() => handleTopXm4Change(barChartDatam4,3)}>Top 3</Button>
                       <Button onClick={() => handleTopXm4Change(barChartDatam4,5)} style={{ marginLeft: 8 }}>Top 5</Button>
-                      <Button onClick={() => handleTopXm4Change(barChartDatam4,10)} style={{ marginLeft: 8 }}>Top 10</Button>
-                    </div>           
+                      <Button onClick={() => handleTopXm4Change(barChartDatam4,0)} style={{ marginLeft: 8 }}>All</Button>
+                    </div>{viewMode4 === 'chart' ? (               
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={barChartDatam4TopX.length > 0 ? barChartDatam4TopX : barChartDatam4}>
                         <CartesianGrid strokeDasharray="3 3" />
@@ -749,7 +765,9 @@ const Dashboard = () => {
                             ))}
                           </Bar>
                       </BarChart>
-                    </ResponsiveContainer>            
+                    </ResponsiveContainer> ):(
+                        <Table dataSource={barChartDatam4} columns={columnsdata4Audit} scroll={{y:200}} pagination={false} style={{ width: '100%', height: '300px' }}/>
+                      )}           
                   </Col>
                   <Col span={12}>
                   <h2>Account activity</h2>
@@ -780,8 +798,8 @@ const Dashboard = () => {
                   <div style={{ marginBottom: '10px' }}>
                       <Button onClick={() => handleTopXm6Change(barChartDatam6Audit,3)}>Top 3</Button>
                       <Button onClick={() => handleTopXm6Change(barChartDatam6Audit,5)} style={{ marginLeft: 8 }}>Top 5</Button>
-                      <Button onClick={() => handleTopXm6Change(barChartDatam6Audit,10)} style={{ marginLeft: 8 }}>Top 10</Button>
-                    </div>             
+                      <Button onClick={() => handleTopXm6Change(barChartDatam6Audit,0)} style={{ marginLeft: 8 }}>All</Button>
+                    </div>{viewMode6 === 'chart' ? (           
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={barChartDatam6TopX.length > 0 ? barChartDatam6TopX : barChartDatam6Audit}>
                         <CartesianGrid strokeDasharray="3 3" />
@@ -795,7 +813,9 @@ const Dashboard = () => {
                             ))}
                           </Bar>
                       </BarChart>
-                    </ResponsiveContainer>            
+                    </ResponsiveContainer>  ):(
+                        <Table dataSource={barChartDatam6Audit} columns={columnsdata6Audit} scroll={{y:200}} pagination={false} style={{ width: '100%', height: '300px' }}/>
+                      )}                      
                   </Col>
                   <Col span={12}>
                   <h2>UID</h2>
@@ -902,18 +922,18 @@ const Dashboard = () => {
                             dataKey="pv"
                             stroke="#8884d8"
                             dot={(dataPoint) => {
-                              const { cx, cy } = dataPoint;  // Lấy giá trị cx và cy từ dataPoint
-                              return anomalyTimestamps.includes(dataPoint.payload.name) ? (
+                              const { cx, cy } = dataPoint;  
+                              return anomalyTimestamps?.includes(dataPoint.payload.name) ? (
                                 <circle
-                                    cx={cx}
-                                    cy={cy}
-                                    r={8}
-                                    fill="red"
-                                    onClick={() => handleDotClickAccess(dataPoint.payload.name)}  // Thêm sự kiện onClick
-                                    style={{ cursor: 'pointer' }}
-                                  />  // Định nghĩa vị trí của chấm dựa trên cx, cy
+                                  cx={cx}
+                                  cy={cy}
+                                  r={8}
+                                  fill="red"
+                                  onClick={() => handleDotClickAccess(dataPoint.payload.name)}  // Thêm sự kiện onClick
+                                  style={{ cursor: 'pointer' }}
+                                />
                               ) : (
-                                <circle cx={cx} cy={cy} r={4} fill="#8884d8" />
+                                <circle cx={cx} cy={cy} r={8} fill="#8884d8" />
                               );
                             }}
                           />
@@ -927,7 +947,7 @@ const Dashboard = () => {
                       onCancel={() => setIsLogModalVisibleAccess(false)}
                       footer={null}
                       width={1300}
-                      height={1000}
+
                     >
                       <Table
                         dataSource={filteredLogs.map((item: any) => ({
@@ -943,7 +963,7 @@ const Dashboard = () => {
                         prevIcon: <Button>«</Button>,
                         nextIcon: <Button>»</Button>,
                       }}
-                      scroll={{x:1000,y:1000}}
+                      scroll={{x:1000,y:500}}
                       components={{
                         header: {
                           cell: ResizableTitle,
