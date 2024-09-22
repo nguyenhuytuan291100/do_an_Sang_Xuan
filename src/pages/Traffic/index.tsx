@@ -51,12 +51,12 @@ const Dashboard = () => {
     [key: string]: any;
   }
   const [netgraph, setNetgraph] = useState<Netgraph[]>([]);
-  const [nettablecolumns, setNettablecolumns] = useState([
+  const nettablecolumns = [
     { title: 'Source', dataIndex: 'source', key: 'src', width: 150 },
     { title: 'Target', dataIndex: 'target', key: 'targ', width: 150 },
     { title: 'Server', dataIndex: 'nameserver', key: 'srv', width: 150 },
     { title: 'Label', dataIndex: 'label', key: 'labl', width: 80 },
-  ]);
+  ]
   const [nettable, setNettable] = useState([]);
   //M4
   const [totalE, setTotalEM4] = useState([]);
@@ -377,6 +377,10 @@ const Dashboard = () => {
     { title: 'Source to Destination IP', dataIndex: 'name', key: 'name' },
     { title: 'Count', dataIndex: 'uv', key: 'uv' },
   ];
+  const columnsdata15 = [
+    { title: 'Protocol', dataIndex: 'name', key: 'name' },
+    { title: 'Count', dataIndex: 'uv', key: 'uv' },
+  ];
   const columnsdata1617 = [
     { title: 'Port', dataIndex: 'name', key: 'name' },
     { title: 'Count', dataIndex: 'uv', key: 'uv' },
@@ -384,6 +388,8 @@ const Dashboard = () => {
   const [viewMode10, setViewMode10] = useState('table'); 
   const [viewMode11, setViewMode11] = useState('table'); 
   const [viewMode12, setViewMode12] = useState('table'); 
+  const [viewMode15, setViewMode15] = useState('table'); 
+
   const [viewMode16, setViewMode16] = useState('table'); 
   const [viewMode17, setViewMode17] = useState('table'); 
   const handleTopXm9Change = (data: ChartData[],topX: number) => {
@@ -415,6 +421,11 @@ const Dashboard = () => {
   };
   const handleTopXm15Change = (data: ChartData[],topX: number) => {
     setBarChartDatam15TopX(getTopXData(data, topX));
+    if (topX ===0) {
+      setViewMode15('table'); // Chuyển sang chế độ bảng khi nhấn Top 10
+    } else {
+      setViewMode15('chart'); // Hiển thị biểu đồ cho Top 3 và Top 5
+    }
   };
   const handleTopXm16Change = (data: ChartData[],topX: number) => {
     setBarChartDatam16TopX(getTopXData(data, topX));
@@ -572,7 +583,7 @@ const Dashboard = () => {
             {viewType === "Map" && (
               <Col span={16}>
                 <Tabs activeKey={activeTabKey} onChange={handleTabChange} centered>
-                  <TabPane tab="Time analysis" key="2" />
+                  <TabPane tab="Overview" key="2" />
                   <TabPane tab="Artifacts" key="3" />
                   <TabPane tab="Communications" key="4" />
                   <TabPane tab="Network" key="1" />
@@ -591,7 +602,14 @@ const Dashboard = () => {
                   </div>
                 </Col><Col span={8}><div >
                   <h1>Network Table</h1>
-                  <Table dataSource={nettable} columns={nettablecolumns} scroll={{y:300}} pagination={false} style={{ width: '100%', height: '400px', marginLeft:'10px' }}/>
+                  <Table dataSource={nettable} 
+                  columns={nettablecolumns} 
+                  scroll={{y:300}} 
+                  pagination={false} 
+                  style={{ width: '100%', height: '400px', marginLeft:'10px' }}
+                  rowClassName={(record:any) => (record.label === 'Anomaly' ? 'anomaly-row' : '')}
+                  className="custom-table"
+                  />
                   </div>
                 </Col>
                    </Row>
@@ -830,7 +848,7 @@ const Dashboard = () => {
                   <Row gutter={[24, 24]} className="event-summary" style={{ marginBottom: "20px" }}>
                     <Col span={12}>
                       <Card style={{ background: "#1c1c1e", color: "#fff" }}>
-                        <h3>Suspicious Traffic</h3>
+                        <h3>Overview</h3>
                         <p>
                           <Tooltip title="Max packet size" placement="right">
                           Max packet size: {Datam8Max} Bytes <i className="fas fa-info-circle"></i>
@@ -970,7 +988,7 @@ const Dashboard = () => {
                   <Row gutter={[24, 24]} className="event-summary" style={{ marginBottom: "20px" }}>
                     <Col span={12}>
                       <Card style={{ background: "#1c1c1e", color: "#fff" }}>
-                        <h3>Suspicious Traffic</h3>
+                        <h3>Overview</h3>
                         <p>
                           <Tooltip title="Range of size" placement="right">
                             Number Src Port: {Datam813UniSrc} Ports <i className="fas fa-info-circle"></i>
@@ -995,7 +1013,7 @@ const Dashboard = () => {
                     </Col>
                     <Col span={12}>
                       <Card style={{ background: "#1c1c1e", color: "#fff" }}>
-                        <h3>Suspicious Traffic</h3>
+                        <h3>Overview</h3>
                         <p>
                           <Tooltip title="Range of size" placement="right">
                             Max Duration: {Data13Max}s <i className="fas fa-info-circle"></i>
@@ -1042,7 +1060,7 @@ const Dashboard = () => {
                       <Button onClick={() => handleTopXm15Change(barChartData15,3)}>Top 3</Button>
                       <Button onClick={() => handleTopXm15Change(barChartData15,5)} style={{ marginLeft: 8 }}>Top 5</Button>
                       <Button onClick={() => handleTopXm15Change(barChartData15,0)} style={{ marginLeft: 8 }}>All</Button>
-                    </div>
+                    </div>{viewMode15 === 'chart' ? (
                       <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={barChartDatam15TopX.length > 0 ? barChartDatam15TopX : barChartData15}>
                           <CartesianGrid strokeDasharray="3 3" />
@@ -1056,7 +1074,9 @@ const Dashboard = () => {
                             ))}
                           </Bar>
                         </BarChart>
-                      </ResponsiveContainer>
+                      </ResponsiveContainer>):(
+                        <Table dataSource={barChartData15} columns={columnsdata15} scroll={{y:200}} pagination={false} style={{ width: '100%', height: '300px' }}/>
+                      )}
                     </Col>
                   </Row>
                   <Row gutter={[20, 20]} className="chart-row">

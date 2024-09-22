@@ -8,6 +8,7 @@ import ResizableTitle from "pages/App/subcomponents/MainLayout/subcomponents/Res
 import { SearchOutlined, FilterOutlined } from '@ant-design/icons';
 import { Modal } from 'antd';
 import { gettraffic, gettrafficById} from '../../services/apiService';
+import { color } from "d3";
 
 const stackedbarchartdata = [
   {
@@ -67,6 +68,7 @@ const COLORS = [
 ];
 
 const Dashboard = () => {
+  const styles = { backgroundColor: '#ffcccc !important',color:'red'}
   //log
   const { id } = useParams();
   const [viewType, setViewType] = useState("Map");
@@ -473,7 +475,7 @@ const Dashboard = () => {
               <Col span={16}>
                 <Tabs activeKey={activeTabKey} onChange={handleTabChange} centered >
                   <TabPane 
-                    tab="DNS Log" 
+                    tab="DNSmasq Log" 
                     key="1" 
                     disabled={log_type !== ('dns')} 
                     active={log_type === ('dns')}
@@ -506,10 +508,10 @@ const Dashboard = () => {
                   <Row gutter={[24, 24]} className="chart-row">
                   <Col span={12}>
                       <Card style={{ background: "#1c1c1e", color: "#fff", height:'150px',marginBottom:'20px', marginTop:'20px' }}>
-                        <h3>Total Event</h3>
+                        <h3>Total Event </h3>
                         <p>
                           <Tooltip title="Total Event" placement="right">
-                            {/* {Data13[0]} events <i className="fas fa-info-circle"></i> */}
+                            {Data13[0]} events <i className="fas fa-info-circle"></i>
                           </Tooltip>
                         </p>
                       </Card>
@@ -517,7 +519,7 @@ const Dashboard = () => {
                         <h3>Alert Event</h3>
                         <p>
                           <Tooltip title="Total Event" placement="right">
-                            {/* {Data13[1]} events <i className="fas fa-info-circle"></i> */}
+                            {Data13[1]} events <i className="fas fa-info-circle"></i>
                           </Tooltip>
                         </p>
                       </Card>
@@ -588,7 +590,7 @@ const Dashboard = () => {
                       <Table
                         dataSource={filteredLogs.map((item: any) => ({
                           ...item,
-                          rowClassName: item.label === 'Anomaly' ? 'anomaly-row' : '',
+                          rowClassName: item.label === 'Anomaly' ? 'anomaly-row1' : '',
                         }))}
                         columns={columns}
                         rowKey="id"
@@ -605,9 +607,10 @@ const Dashboard = () => {
                           cell: ResizableTitle,
                         },
                       }}
-                      rowClassName={(record) => (record.Anomaly === 'Anomaly' ? 'anomaly-row' : '')}
-                      className="custom-table"
+                      rowClassName={(record) => (record.Anomaly.includes('Anomaly')  ? 'anomaly-row' : '')}
+                      // className="custom-table"
                       />
+
                     </Modal>
                   <Row gutter={[20, 20]} className="chart-row">
                     <Col span={12}>  
@@ -616,7 +619,7 @@ const Dashboard = () => {
                     <div style={{ marginBottom: '10px' }}>
                       <Button onClick={() => handleTopXm4Change(barChartDatam4,3)}>Top 3</Button>
                       <Button onClick={() => handleTopXm4Change(barChartDatam4,5)} style={{ marginLeft: 8 }}>Top 5</Button>
-                      <Button onClick={() => handleTopXm4Change(barChartDatam4,10)} style={{ marginLeft: 8 }}>Top 10</Button>
+                      <Button onClick={() => handleTopXm4Change(barChartDatam4,0)} style={{ marginLeft: 8 }}>All</Button>
                     </div>{viewMode4 === 'chart' ? (            
                       <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={barChartDatam4TopX.length > 0 ? barChartDatam4TopX : barChartDatam4}>
