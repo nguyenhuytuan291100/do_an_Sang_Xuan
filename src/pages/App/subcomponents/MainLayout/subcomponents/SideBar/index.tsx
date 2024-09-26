@@ -24,6 +24,9 @@ import { Upload, Button } from "antd";
 import { PlusOutlined, FileOutlined, MinusOutlined } from "@ant-design/icons";
 import { UploadRequestOption } from "rc-upload/lib/interface";  // Import kiểu dữ liệu chính xác
 import { uploadTrafficFile, gettraffic, deletetrafficById,uploadLogFile, getlog, deletelogById } from "../../../../../../services/apiService"
+import useSWR from "swr";
+import { useGetTraffic } from "utils/request/useGetTraffic";
+import { useGetLog } from "utils/request/useLog";
 
 type Props = {
   collapsed: boolean;
@@ -33,247 +36,138 @@ type Props = {
 const { Sider } = Layout;
 const { SubMenu } = Menu;
 
+const fetcher = (url: string) => {
+  if (url === '/traffic') return gettraffic();
+  if (url === '/log') return getlog();
+};
+
 const SideBar: React.FC<Props> = ({ collapsed, setCollapsed }) => {
-  const navigation = useNavigate()
-  const [logFiles, setLogFiles] = useState<string[]>([]);  // Trạng thái để lưu trữ các tệp đã tải lên cho Log
-  const [trafficFiles, setTrafficFiles] = useState<string[]>([]);  // Trạng thái để lưu trữ các tệp đã tải lên cho Traffic
-  const [isLoading, setIsLoading] = useState(false);
-  const getSideBar = async () => {
-      setIsLoading(true)
-      try {
-        const [response1, response2] = await Promise.all([
-          gettraffic(),
-          getlog()
-        ]);
-        console.log("response: ", response1);
-        setTrafficFiles(response1)
-        setLogFiles(response2);
-      } catch (err) {
-        console.log(err);
-        setIsLoading(false);
-      } finally {
-        // Kết thúc isLoading
-        setIsLoading(false);
-      }
-    };
-  useEffect(()=>{
-    // gettraffic().then((res) => {
-    //   setTrafficFiles(res)
-    // })
-    // getlog().then((res) => {
-    //   setLogFiles(res)
-    // })
-    getSideBar();
-  },[])
+  const navigation = useNavigate();
   
-  const handleUpload = async (options: UploadRequestOption, setFiles: React.Dispatch<React.SetStateAction<string[]>>) => {
+  // Sử dụng SWR để lấy dữ liệu cho traffic và log
+  const { data: trafficFiles, error: trafficError, isLoading: trafficLoading, mutate: mutateTraffic } = useGetTraffic();
+  const { data: logFiles, error: logError, isLoading: logLoading, mutate: mutateLog } = useGetLog();
+  console.log(trafficFiles);
+  
+  const handleUpload = async (options: UploadRequestOption, mutate: any) => {
     const { file, onSuccess, onError } = options;
-    const fileName = (file as File).name;
-
-    // Kiểm tra nếu tên file đã tồn tại trong danh sách, không thêm nữa
-    setFiles((prevFiles) => {
-      if (!prevFiles.includes(fileName)) {
-        return [...prevFiles, fileName];
-      }else{ return prevFiles;}
-      
-      
-    });
-
-    console.log("UpisLoading:", fileName);
     try {
-      // Gọi API upload file (không chờ kết quả xử lý xong)
+      console.log("Uploading Traffic");
       await uploadTrafficFile(file as File);
-
       onSuccess?.("ok", new XMLHttpRequest());
-      console.log("Upload successful");
-      await  gettraffic().then((res)=>{
-        setTrafficFiles(res)
-      });
+      console.log("Complete");
+      
+      // Sau khi upload thành công, cập nhật dữ liệu bằng mutate
+      mutateTraffic();
     } catch (error) {
       onError?.(new Error("upload failed"));
-      console.error("Upload error:", error);
     }
-    
   };
 
-  const handleUploadLog = async (options: UploadRequestOption, setFiles: React.Dispatch<React.SetStateAction<string[]>>) => {
+  const handleUploadLog = async (options: UploadRequestOption, mutate: any) => {
     const { file, onSuccess, onError } = options;
-    const fileName = (file as File).name;
-
-    // Kiểm tra nếu tên file đã tồn tại trong danh sách, không thêm nữa
-    setFiles((prevFiles) => {
-      if (!prevFiles.includes(fileName)) {
-        return [...prevFiles, fileName];
-      }else{ return prevFiles;}
-      
-    });
-
-    console.log("UpisLoading:", fileName);
     try {
-      // Gọi API upload file (không chờ kết quả xử lý xong)
+      console.log("Uploading Log");
       await uploadLogFile(file as File);
-
       onSuccess?.("ok", new XMLHttpRequest());
-      console.log("Upload successful");
-
-      
-      await getlog().then((log)=>{
-        setLogFiles(log)
-      })
-
+      console.log("Complete");
+      mutateLog();
     } catch (error) {
       onError?.(new Error("upload failed"));
-      console.error("Upload error:", error);
     }
-    
   };
 
-  
+  const handleOnClickLog = (id: any) => {
+    navigation(`/log/${id}`);
+  };
+
+  const handleOnClickTraffic = (id: any) => {
+    navigation(`/traffic/${id}`);
+  };
+
+  const handleOnClickDeleteLog = async (id: any) => {
+    await deletelogById(id);
+    console.log("delete Log complete");
+    mutateLog(); // Cập nhật dữ liệu sau khi xóa
+  };
+
+  const handleOnClickDeleteTraffic = async (id: any) => {
+    await deletetrafficById(id);
+    console.log("delete Traffic complete");
+    mutateTraffic(); // Cập nhật dữ liệu sau khi xóa
+  };
+
   const logUploadProps = {
     showUploadList: false,
-    customRequest: (options: UploadRequestOption) => handleUploadLog(options, setLogFiles),
+    customRequest: (options: UploadRequestOption) => handleUploadLog(options, mutateLog),
   };
 
   const trafficUploadProps = {
     showUploadList: false,
-    customRequest: (options: UploadRequestOption) => handleUpload(options, setTrafficFiles),
+    customRequest: (options: UploadRequestOption) => handleUpload(options, mutateTraffic),
   };
-
-  const handleOnClickLog=(id: any)=>{
-    navigation(`/log/${id}`)
-  };
-
-  const handleOnClickTraffic =(id: any)=>{
-    navigation(`/traffic/${id}`)
-  }
-
-  const handleOnClickDeleteLog = async (id:any) =>{
-    console.log(id)
-    await deletelogById(id)
-    
-    await getlog().then((log)=>{
-      setLogFiles(log)
-    })
-    // navigation(`/Log/delete/${id}`)
-  }
-
-  const handleOnClickDeleteTraffic = async (id:any) =>{
-    console.log(id)
-    await deletetrafficById(id)
-    await gettraffic().then((res)=>{
-      setTrafficFiles(res)
-    });
-    // navigation(`/traffic/`)
-  }
-  
 
   return (
-    <Spin spinning={isLoading}>
-    <Sider
-      onCollapse={(value) => setCollapsed(value)}
-      className={collapsed ? "sider unCollapsed-sider" : "sider"}
-      collapsible={false}
-      theme="light"
-      width={270}
-      breakpoint="xl"
-      collapsed={collapsed}
-    >
-      <Row style={{ height: "70px" }}></Row>
-      <Row className="menu-container">
-        <Row className="title-menu-container">
-          <Typography className="title-menu-text">N3TW0RK F0R3NS1C5</Typography>
+    <Spin spinning={trafficLoading || logLoading}>
+      <Sider
+        onCollapse={(value) => setCollapsed(value)}
+        className={collapsed ? "sider unCollapsed-sider" : "sider"}
+        collapsible={false}
+        theme="light"
+        width={270}
+        breakpoint="xl"
+        collapsed={collapsed}
+      >
+        <Row style={{ height: "70px" }}></Row>
+        <Row className="menu-container">
+          <Row className="title-menu-container">
+            <Typography className="title-menu-text">N3TW0RK F0R3NS1C5</Typography>
+          </Row>
+          <Menu inlineCollapsed={collapsed} mode="inline" inlineIndent={10}>
+            <Menu.Item key="1">
+              <Link className="menuText" to="/">
+                Home
+              </Link>
+            </Menu.Item>
+
+            <SubMenu key="sub1" title="Dashboard" icon={<FileOutlined />}>
+              {/* Log Section */}
+              <SubMenu key="sub-log" title="Log" icon={<FileOutlined />}>
+                {logFiles?.map((item: any, index: number) => (
+                  <Menu.Item key={`log-file-${index}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Button onClick={() => handleOnClickDeleteLog(item.id)} style={{ cursor: 'pointer', marginRight: 0, color: "rgb(91, 107, 121)", backgroundColor: "rgb(178, 223, 219)" }} icon={<MinusOutlined />}></Button>
+                    <Button onClick={() => handleOnClickLog(item.id)} style={{ marginLeft: 5, color: "rgb(91, 107, 121)", backgroundColor: "rgb(178, 223, 219)" }} icon={<FileOutlined />}>{item.filename}</Button>
+                  </Menu.Item>
+                ))}
+                <Menu.Item key="upload-log">
+                  <Upload {...logUploadProps}>
+                    <Button type="link" icon={<PlusOutlined />} style={{ padding: 0, marginLeft: 10 }}>
+                      Upload Log File
+                    </Button>
+                  </Upload>
+                </Menu.Item>
+              </SubMenu>
+
+              {/* Traffic Section */}
+              <SubMenu key="sub-traffic" title="Traffic" icon={<FileOutlined />}>
+                {trafficFiles?.map((item: any, index: number) => (
+                  <Menu.Item key={`traffic-file-${index}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Button onClick={() => handleOnClickDeleteTraffic(item.id)} style={{ cursor: 'pointer', marginRight: 0, color: "rgb(91, 107, 121)", backgroundColor: "rgb(178, 223, 219)" }} icon={<MinusOutlined />}></Button>
+                    <Button onClick={() => handleOnClickTraffic(item.id)} style={{ marginLeft: 5, color: "rgb(91, 107, 121)", backgroundColor: "rgb(178, 223, 219)" }} icon={<FileOutlined />}>{item.filename}</Button>
+                  </Menu.Item>
+                ))}
+                <Menu.Item key="upload-traffic">
+                  <Upload {...trafficUploadProps}>
+                    <Button type="link" icon={<PlusOutlined />} style={{ padding: 0, marginLeft: 10 }}>
+                      Upload Traffic File
+                    </Button>
+                  </Upload>
+                </Menu.Item>
+              </SubMenu>
+            </SubMenu>
+          </Menu>
         </Row>
-        <Menu inlineCollapsed={collapsed} mode="inline" inlineIndent={10}>
-          <Menu.Item key="1">
-            <Icons.homeTwoTone size={40} />
-            <Link className="menuText" to={HOME}>
-              Home
-            </Link>
-          </Menu.Item>
-
-          <SubMenu
-            key="sub1"
-            title={
-              <>
-                <Icons.dashBoardTwoTone size={40} />
-                <span className="menuText">Dashboard</span>
-              </>
-            }
-          >
-            {/* Log Section */}
-            <SubMenu
-              key="sub-log"
-              title="Log"
-              icon={<FileOutlined />}
-            >
-              {logFiles.map((item: any, index) => (
-                <Menu.Item 
-                  key={`log-file-${index}`} 
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                >
-                  <div>
-                  <Button onClick={() => handleOnClickDeleteLog(item.id)} 
-                      style={{ cursor: 'pointer', marginRight: 0 , color: "rgb(91, 107, 121)" , backgroundColor: "rgb(178, 223, 219)" }} icon={<MinusOutlined         
-                        />}></Button>
-                    <Button onClick={()=>handleOnClickLog(item.id)} style={{ marginLeft: 5 , color: "rgb(91, 107, 121)" , backgroundColor: "rgb(178, 223, 219)"}} icon={<FileOutlined />}>{item.filename}</Button>
-                    
-                    </div>
-                  
-                </Menu.Item>
-              ))}
-              <Menu.Item key="upload-log">
-                <Upload {...logUploadProps}>
-                  <Button
-                    type="link"
-                    icon={<PlusOutlined />}
-                    style={{ padding: 0, marginLeft: 10 }}
-                  >
-                    Upload Log File
-                  </Button>
-                </Upload>
-              </Menu.Item>
-            </SubMenu>
-
-            {/* Traffic Section */}
-            <SubMenu
-              key="sub-traffic"
-              title="Traffic"
-              icon={<FileOutlined />}
-            >
-              {trafficFiles.map((item: any, index) => (
-                <Menu.Item 
-                  key={`traffic-file-${index}`} 
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                >
-                  
-                    {/* <FileOutlined /> */}
-                    {/* /* <Link to={TRAFFIC}><Button onClick={()=>handleOnClickTraffic(item.id)} style={{ marginLeft: 10 }}>{item.filename}</Button></Link> */ }
-                    <div>
-                    <Button onClick={() => handleOnClickDeleteTraffic(item.id)} 
-                      style={{ cursor: 'pointer', marginRight: 0, color: "rgb(91, 107, 121)" , backgroundColor: "rgb(178, 223, 219)"  }} icon={<MinusOutlined         
-                        />}></Button>
-                    <Button onClick={()=>handleOnClickTraffic(item.id)} style={{ marginLeft: 5 , color: "rgb(91, 107, 121)" , backgroundColor: "rgb(178, 223, 219)" }} icon={<FileOutlined />}>{item.filename}</Button>
-                    
-                    </div>
-                  
-                </Menu.Item>
-              ))}
-              <Menu.Item key="upload-traffic">
-                <Upload {...trafficUploadProps}>
-                  <Button
-                    type="link"
-                    icon={<PlusOutlined />}
-                    style={{ padding: 0, marginLeft: 10 }}
-                  >
-                    Upload Traffic File
-                  </Button>
-                </Upload>
-              </Menu.Item>
-            </SubMenu>
-          </SubMenu>
-        </Menu>
-      </Row>
-    </Sider>
+      </Sider>
     </Spin>
   );
 };
