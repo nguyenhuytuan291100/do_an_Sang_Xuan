@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";  // Thêm useState để quản lý trạng thái
-import { Layout, Row, Image, Typography, Menu } from "antd";
+import { Layout, Row, Image, Typography, Menu, Spin } from "antd";
 import "pages/App/subcomponents/MainLayout/subcomponents/SideBar/style.scss";
 import { menuItems } from "pages/App/subcomponents/MainLayout/subcomponents/SideBar/config";
 import { Link, useNavigate } from "react-router-dom";
@@ -37,16 +37,33 @@ const SideBar: React.FC<Props> = ({ collapsed, setCollapsed }) => {
   const navigation = useNavigate()
   const [logFiles, setLogFiles] = useState<string[]>([]);  // Trạng thái để lưu trữ các tệp đã tải lên cho Log
   const [trafficFiles, setTrafficFiles] = useState<string[]>([]);  // Trạng thái để lưu trữ các tệp đã tải lên cho Traffic
-
+  const [isLoading, setIsLoading] = useState(false);
+  const getSideBar = async () => {
+      setIsLoading(true)
+      try {
+        const [response1, response2] = await Promise.all([
+          gettraffic(),
+          getlog()
+        ]);
+        console.log("response: ", response1);
+        setTrafficFiles(response1)
+        setLogFiles(response2);
+      } catch (err) {
+        console.log(err);
+        setIsLoading(false);
+      } finally {
+        // Kết thúc isLoading
+        setIsLoading(false);
+      }
+    };
   useEffect(()=>{
-    gettraffic().then((res)=>{
-      setTrafficFiles(res);
-      console.log(trafficFiles);
-    });
-    getlog().then((log)=>{
-      setLogFiles(log);
-      console.log(logFiles);
-    })
+    // gettraffic().then((res) => {
+    //   setTrafficFiles(res)
+    // })
+    // getlog().then((res) => {
+    //   setLogFiles(res)
+    // })
+    getSideBar();
   },[])
   
   const handleUpload = async (options: UploadRequestOption, setFiles: React.Dispatch<React.SetStateAction<string[]>>) => {
@@ -62,7 +79,7 @@ const SideBar: React.FC<Props> = ({ collapsed, setCollapsed }) => {
       
     });
 
-    console.log("Uploading:", fileName);
+    console.log("UpisLoading:", fileName);
     try {
       // Gọi API upload file (không chờ kết quả xử lý xong)
       await uploadTrafficFile(file as File);
@@ -91,7 +108,7 @@ const SideBar: React.FC<Props> = ({ collapsed, setCollapsed }) => {
       
     });
 
-    console.log("Uploading:", fileName);
+    console.log("UpisLoading:", fileName);
     try {
       // Gọi API upload file (không chờ kết quả xử lý xong)
       await uploadLogFile(file as File);
@@ -151,6 +168,7 @@ const SideBar: React.FC<Props> = ({ collapsed, setCollapsed }) => {
   
 
   return (
+    <Spin spinning={isLoading}>
     <Sider
       onCollapse={(value) => setCollapsed(value)}
       className={collapsed ? "sider unCollapsed-sider" : "sider"}
@@ -256,6 +274,7 @@ const SideBar: React.FC<Props> = ({ collapsed, setCollapsed }) => {
         </Menu>
       </Row>
     </Sider>
+    </Spin>
   );
 };
 

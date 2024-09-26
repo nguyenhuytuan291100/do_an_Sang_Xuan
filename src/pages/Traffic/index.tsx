@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Button, Col, Row, Tabs, Card, Tooltip,Table, Input, Select, Menu, Space  } from "antd";
+import { Button, Col, Row, Tabs, Card, Tooltip,Table, Input, Select, Menu, Space , Spin } from "antd";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line,Label } from "recharts";
 import './styles.scss'; // Import file SCSS
 import { useParams } from "react-router-dom";
@@ -117,6 +117,7 @@ const Dashboard = () => {
   // M26
   const [barChartDatam26, setBarChartDatam26] = useState([]);
 
+  const [isLoading, setIsLoading] = useState(false);
   const [columns, setColumns] = useState([
     // { title: 'Flow ID', dataIndex: 'Flow ID', key: 'flowID', width: 100 },
     { title: 'Timestamp', dataIndex: 'Timestamp', key: 'timestamp', width: 120 },
@@ -201,69 +202,70 @@ const Dashboard = () => {
   const handleTabChange = (key: string) => {
     setActiveTabKey(key);
   };
-  useEffect(() => {
-    gettrafficById(id).then((res) => {
-      setTableDatam1(res['m1'])
+  const fetchData = async () => {
+    setIsLoading(true);
+    const res = await gettrafficById(id)
+    setTableDatam1(res['m1'])
       // Xử lý dữ liệu mạng
-      const networkData = res['m2'];
-      const netgraphData = networkData.netgraph.map((node: any) => ({
-        source: node.source,
-        target: node.target,
-        label: node.label,
-      }));
-      const nettableData = networkData.nettable.map((edge: any) => ({
-        source: edge.source,
-        target: edge.target,
-        nameserver: edge.nameserver,
-        label: edge.label,
-      }));
-      setNetgraph(netgraphData);
-      setNettable(nettableData);
-      // Barchart: uv
-      // Linechart: pv
-      setTotalEM4(res['m4']);
-      setLineChartDatam5(res['m5']);
-      setLineChartDatam6(res['m6']);
-      setLineChartDatam7(res['m7']);
-      const parsedData = res['m8'];
-      setDatam8Maxsize(parsedData.max_packet_size)
-      setDatam8Minsize(parsedData.min_packet_size)
-      setDatam8Meansize(parsedData.mean_packet_size)
-      setDatam8SumIP(parsedData.total_unique_ips)
-      setDatam8Src(parsedData.unique_source_ips)
-      setDatam8Dst(parsedData.unique_destination_ips)
-      // Dữ liệu biểu đồ Bar, Line, Pie
-      setBarChartDatam9(res['m9']); // Giả sử dữ liệu bar chart nằm ở phần thứ 5
-      setBarChartDatam10(res['m10']); // Giả sử dữ liệu bar chart nằm ở phần thứ 5
-      setBarChartDatam11(res['m11']); // Giả sử dữ liệu bar chart nằm ở phần thứ 5
-      setBarChartDatam12(res['m12']); // Giả sử dữ liệu bar chart nằm ở phần thứ 5
-      const parsedData13 = res['m13'];
-      setDatam13Maxdur(parsedData13.max_duration)
-      setDatam13Mindur(parsedData13.min_duration)
-      setDatam13Meandur(parsedData13.average_duration)
-      setDatam13UniPro(parsedData13.num_unique_protocol)
-      setDatam13UniSrc(parsedData13.num_unique_source_ports)
-      setDatam13UniDst(parsedData13.num_unique_dst_ports)
-      setDatam13AppPro(parsedData13.num_unique_application_protocol)
-      setPieChartData14(res['m14']); // Giả sử dữ liệu pie chart nằm ở phần thứ 7
-      setBarChartDatam15(res['m15']); // Giả sử dữ liệu bar chart nằm ở phần thứ 5
-      setBarChartDatam16(res['m16']); // Giả sử dữ liệu bar chart nằm ở phần thứ 5
-      setBarChartDatam17(res['m17']); // Giả sử dữ liệu bar chart nằm ở phần thứ 5
-      setLineChartDatam18(res['m18']); // Giả sử dữ liệu bar chart nằm ở phần thứ 5
-      setLineChartDatam19(res['m19']); // Giả sử dữ liệu bar chart nằm ở phần thứ 5
-      setDataM20(res['m20']);
-      setAnomalyTimestamps(res['m21'])
-      const Data22 = res['m22'];
-      setDatam22Alert(Data22[0]);
-      setDatam22IP(Data22[1]);
-      setBarChartDatam23(res['m23']);
-      setBarChartDatam24(res['m24']);
-      setBarChartDatam25(res['m25']);
-      setBarChartDatam26(res['m26']);
-      // console.log(res['m20'])
-    }).catch((error) => {
-      console.error("Error fetching traffic data:", error);
-    });
+    const networkData = res['m2'];
+    const netgraphData = networkData.netgraph.map((node: any) => ({
+      source: node.source,
+      target: node.target,
+      label: node.label,
+    }));
+    const nettableData = networkData.nettable.map((edge: any) => ({
+      source: edge.source,
+      target: edge.target,
+      nameserver: edge.nameserver,
+      label: edge.label,
+    }));
+    setNetgraph(netgraphData);
+    setNettable(nettableData);
+    // Barchart: uv
+    // Linechart: pv
+    setTotalEM4(res['m4']);
+    setLineChartDatam5(res['m5']);
+    setLineChartDatam6(res['m6']);
+    setLineChartDatam7(res['m7']);
+    const parsedData = res['m8'];
+    setDatam8Maxsize(parsedData.max_packet_size)
+    setDatam8Minsize(parsedData.min_packet_size)
+    setDatam8Meansize(parsedData.mean_packet_size)
+    setDatam8SumIP(parsedData.total_unique_ips)
+    setDatam8Src(parsedData.unique_source_ips)
+    setDatam8Dst(parsedData.unique_destination_ips)
+    // Dữ liệu biểu đồ Bar, Line, Pie
+    setBarChartDatam9(res['m9']); // Giả sử dữ liệu bar chart nằm ở phần thứ 5
+    setBarChartDatam10(res['m10']); // Giả sử dữ liệu bar chart nằm ở phần thứ 5
+    setBarChartDatam11(res['m11']); // Giả sử dữ liệu bar chart nằm ở phần thứ 5
+    setBarChartDatam12(res['m12']); // Giả sử dữ liệu bar chart nằm ở phần thứ 5
+    const parsedData13 = res['m13'];
+    setDatam13Maxdur(parsedData13.max_duration)
+    setDatam13Mindur(parsedData13.min_duration)
+    setDatam13Meandur(parsedData13.average_duration)
+    setDatam13UniPro(parsedData13.num_unique_protocol)
+    setDatam13UniSrc(parsedData13.num_unique_source_ports)
+    setDatam13UniDst(parsedData13.num_unique_dst_ports)
+    setDatam13AppPro(parsedData13.num_unique_application_protocol)
+    setPieChartData14(res['m14']); // Giả sử dữ liệu pie chart nằm ở phần thứ 7
+    setBarChartDatam15(res['m15']); // Giả sử dữ liệu bar chart nằm ở phần thứ 5
+    setBarChartDatam16(res['m16']); // Giả sử dữ liệu bar chart nằm ở phần thứ 5
+    setBarChartDatam17(res['m17']); // Giả sử dữ liệu bar chart nằm ở phần thứ 5
+    setLineChartDatam18(res['m18']); // Giả sử dữ liệu bar chart nằm ở phần thứ 5
+    setLineChartDatam19(res['m19']); // Giả sử dữ liệu bar chart nằm ở phần thứ 5
+    setDataM20(res['m20']);
+    setAnomalyTimestamps(res['m21'])
+    const Data22 = res['m22'];
+    setDatam22Alert(Data22[0]);
+    setDatam22IP(Data22[1]);
+    setBarChartDatam23(res['m23']);
+    setBarChartDatam24(res['m24']);
+    setBarChartDatam25(res['m25']);
+    setBarChartDatam26(res['m26']);
+    setIsLoading(false)
+  }
+  useEffect(() => {
+    fetchData()
   }, [id]);
 //Link anomaly Traffic timestamp
   const [isTrafficModalVisible, setIsTrafficModalVisible] = useState(false);  // Quản lý trạng thái modal
@@ -385,6 +387,27 @@ const Dashboard = () => {
     { title: 'Port', dataIndex: 'name', key: 'name' },
     { title: 'Count', dataIndex: 'uv', key: 'uv' },
   ];
+  type ChartBtn = {
+    barChart9:number;
+    barChart10:number;
+    barChart11:number;
+    barChart12:number;
+    barChart15:number;
+    barChart16:number;
+    barChart17:number;
+    barChart24:number;
+    barChart25:number;
+  }
+  const [chartBtn,setChartBtn] = useState<ChartBtn>({  
+    barChart9:10,
+    barChart10:0,
+    barChart11:0,
+    barChart12:0,
+    barChart15:0,
+    barChart16:0,
+    barChart17:0,
+    barChart24:0,
+    barChart25:0,});
   const [viewMode10, setViewMode10] = useState('table'); 
   const [viewMode11, setViewMode11] = useState('table'); 
   const [viewMode12, setViewMode12] = useState('table'); 
@@ -394,9 +417,13 @@ const Dashboard = () => {
   const [viewMode17, setViewMode17] = useState('table'); 
   const handleTopXm9Change = (data: ChartData[],topX: number) => {
     setBarChartDatam9TopX(getTopXData(data, topX));
+    setChartBtn({...chartBtn, barChart9:topX});
+
   };
   const handleTopXm10Change = (data: ChartData[],topX: number) => {
     setBarChartDatam10TopX(getTopXData(data, topX));
+    setChartBtn({...chartBtn, barChart10:topX});
+
     if (topX ===0) {
       setViewMode10('table'); // Chuyển sang chế độ bảng khi nhấn Top 10
     } else {
@@ -405,6 +432,8 @@ const Dashboard = () => {
   };
   const handleTopXm11Change = (data: ChartData[],topX: number) => {
     setBarChartDatam11TopX(getTopXData(data, topX));
+    setChartBtn({...chartBtn, barChart11:topX});
+
     if (topX ===0) {
       setViewMode11('table'); // Chuyển sang chế độ bảng khi nhấn Top 10
     } else {
@@ -413,6 +442,8 @@ const Dashboard = () => {
   };
   const handleTopXm12Change = (data: ChartData[],topX: number) => {
     setBarChartDatam12TopX(getTopXData(data, topX));
+    setChartBtn({...chartBtn, barChart12:topX});
+
     if (topX ===0) {
       setViewMode12('table'); // Chuyển sang chế độ bảng khi nhấn Top 10
     } else {
@@ -421,6 +452,8 @@ const Dashboard = () => {
   };
   const handleTopXm15Change = (data: ChartData[],topX: number) => {
     setBarChartDatam15TopX(getTopXData(data, topX));
+    setChartBtn({...chartBtn, barChart15:topX});
+
     if (topX ===0) {
       setViewMode15('table'); // Chuyển sang chế độ bảng khi nhấn Top 10
     } else {
@@ -429,6 +462,8 @@ const Dashboard = () => {
   };
   const handleTopXm16Change = (data: ChartData[],topX: number) => {
     setBarChartDatam16TopX(getTopXData(data, topX));
+    setChartBtn({...chartBtn, barChart16:topX});
+
     if (topX ===0) {
       setViewMode16('table'); // Chuyển sang chế độ bảng khi nhấn Top 10
     } else {
@@ -437,6 +472,8 @@ const Dashboard = () => {
   };
   const handleTopXm17Change = (data: ChartData[],topX: number) => {
     setBarChartDatam17TopX(getTopXData(data, topX));
+    setChartBtn({...chartBtn, barChart17:topX});
+
     if (topX ===0) {
       setViewMode17('table'); // Chuyển sang chế độ bảng khi nhấn Top 10
     } else {
@@ -447,6 +484,8 @@ const Dashboard = () => {
   const [viewMode25, setViewMode25] = useState('table'); 
   const handleTopXm24Change = (data: ChartData[],topX: number) => {
     setBarChartDatam24TopX(getTopXData(data, topX));
+    setChartBtn({...chartBtn, barChart24:topX});
+
     if (topX ===0) {
       setViewMode24('table'); // Chuyển sang chế độ bảng khi nhấn Top 10
     } else {
@@ -455,6 +494,8 @@ const Dashboard = () => {
   };
   const handleTopXm25Change = (data: ChartData[],topX: number) => {
     setBarChartDatam25TopX(getTopXData(data, topX));
+    setChartBtn({...chartBtn, barChart25:topX});
+
     if (topX === 0) {
       setViewMode25('table'); // Chuyển sang chế độ bảng khi nhấn Top 10
     } else {
@@ -570,6 +611,7 @@ const Dashboard = () => {
   const columnsWithButton = Array.isArray(columns) ? [...columns, actionColumn] : [actionColumn];
   
   return (
+    <Spin tip="Loading..." spinning={isLoading}>
     <div className="dashboard-page page">
       <div className="page-header">Dashboard</div>
       <div className="page-container">
@@ -791,9 +833,9 @@ const Dashboard = () => {
                     <Col span={12}>
                     <h2>Top Alert-Generating Hosts</h2>
                     <div style={{ marginBottom: '10px' }}>
-                      <Button onClick={() => handleTopXm24Change(barChartDatam24,3)}>Top 3</Button>
-                      <Button onClick={() => handleTopXm24Change(barChartDatam24,5)} style={{ marginLeft: 8 }}>Top 5</Button>
-                      <Button onClick={() => handleTopXm24Change(barChartDatam24,0)} style={{ marginLeft: 8 }}>All</Button>
+                      <Button type={chartBtn.barChart24 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm24Change(barChartDatam24,3)}>Top 3</Button>
+                      <Button type={chartBtn.barChart24 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm24Change(barChartDatam24,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button type={chartBtn.barChart24 === 0 ? 'primary' : 'default'} onClick={() => handleTopXm24Change(barChartDatam24,0)} style={{ marginLeft: 8 }}>All</Button>
                     </div>
                     {viewMode24 === 'chart' ? (
                       <ResponsiveContainer width="100%" height={300}>
@@ -817,9 +859,9 @@ const Dashboard = () => {
                     <Col span={12}>
                     <h2>Top Alert-receiving Hosts</h2>
                     <div style={{ marginBottom: '10px' }}>
-                      <Button onClick={() => handleTopXm25Change(barChartDatam25,3)}>Top 3</Button>
-                      <Button onClick={() => handleTopXm25Change(barChartDatam25,5)} style={{ marginLeft: 8 }}>Top 5</Button>
-                      <Button onClick={() => handleTopXm25Change(barChartDatam25,0)} style={{ marginLeft: 8 }}>All</Button>
+                      <Button type={chartBtn.barChart25 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm25Change(barChartDatam25,3)}>Top 3</Button>
+                      <Button type={chartBtn.barChart25 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm25Change(barChartDatam25,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button type={chartBtn.barChart25 === 0 ? 'primary' : 'default'} onClick={() => handleTopXm25Change(barChartDatam25,0)} style={{ marginLeft: 8 }}>All</Button>
                     </div>
                     {viewMode25 === 'chart' ? (
                       <ResponsiveContainer width="100%" height={300}>
@@ -886,9 +928,9 @@ const Dashboard = () => {
                     <Col span={12}>
                     <h2>Distribution of packet size</h2>
                     <div style={{ marginBottom: '10px' }}>
-                      <Button onClick={() => handleTopXm9Change(barChartDatam9,3)}>Top 3</Button>
-                      <Button onClick={() => handleTopXm9Change(barChartDatam9,5)} style={{ marginLeft: 8 }}>Top 5</Button>
-                      <Button onClick={() => handleTopXm9Change(barChartDatam9,10)} style={{ marginLeft: 8 }}>Top 10</Button>
+                      <Button type={chartBtn.barChart9 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm9Change(barChartDatam9,3)}>Top 3</Button>
+                      <Button type={chartBtn.barChart9 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm9Change(barChartDatam9,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button type={chartBtn.barChart9 === 10 ? 'primary' : 'default'} onClick={() => handleTopXm9Change(barChartDatam9,10)} style={{ marginLeft: 8 }}>Top 10</Button>
                     </div>
                       <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={barChartDatam9TopX.length > 0 ? barChartDatam9TopX : barChartDatam9}>
@@ -909,9 +951,9 @@ const Dashboard = () => {
                     <Col span={12}>
                     <h2>Distribution of Top Source IP</h2>
                     <div style={{ marginBottom: '10px' }}>
-                      <Button onClick={() => handleTopXm10Change(barChartDatam10,3)}>Top 3</Button>
-                      <Button onClick={() => handleTopXm10Change(barChartDatam10,5)} style={{ marginLeft: 8 }}>Top 5</Button>
-                      <Button onClick={() => handleTopXm10Change(barChartDatam10,0)} style={{ marginLeft: 8 }}>All</Button>
+                      <Button type={chartBtn.barChart10 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm10Change(barChartDatam10,3)}>Top 3</Button>
+                      <Button type={chartBtn.barChart10 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm10Change(barChartDatam10,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button type={chartBtn.barChart10 === 0 ? 'primary' : 'default'} onClick={() => handleTopXm10Change(barChartDatam10,0)} style={{ marginLeft: 8 }}>All</Button>
                     </div>{viewMode10 === 'chart' ? (
                       <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={barChartDatam10TopX.length > 0 ? barChartDatam10TopX : barChartDatam10}>
@@ -935,9 +977,9 @@ const Dashboard = () => {
                     <Col span={12}>
                     <h2>Distribution of Top Destination IP</h2>
                     <div style={{ marginBottom: '10px' }}>
-                      <Button onClick={() => handleTopXm11Change(barChartData11,3)}>Top 3</Button>
-                      <Button onClick={() => handleTopXm11Change(barChartData11,5)} style={{ marginLeft: 8 }}>Top 5</Button>
-                      <Button onClick={() => handleTopXm11Change(barChartData11,0)} style={{ marginLeft: 8 }}>All</Button>
+                      <Button type={chartBtn.barChart11 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm11Change(barChartData11,3)}>Top 3</Button>
+                      <Button type={chartBtn.barChart11 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm11Change(barChartData11,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button type={chartBtn.barChart11 === 0 ? 'primary' : 'default'} onClick={() => handleTopXm11Change(barChartData11,0)} style={{ marginLeft: 8 }}>All</Button>
                     </div>{viewMode11 === 'chart' ? (
                       <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={barChartDatam11TopX.length > 0 ? barChartDatam11TopX : barChartData11}>
@@ -959,9 +1001,9 @@ const Dashboard = () => {
                     <Col span={12}>
                     <h2>Top IP pairs by traffic volume (len)</h2>
                     <div style={{ marginBottom: '10px' }}>
-                      <Button onClick={() => handleTopXm12Change(barChartData12,3)}>Top 3</Button>
-                      <Button onClick={() => handleTopXm12Change(barChartData12,5)} style={{ marginLeft: 8 }}>Top 5</Button>
-                      <Button onClick={() => handleTopXm12Change(barChartData12,0)} style={{ marginLeft: 8 }}>All</Button>
+                      <Button type={chartBtn.barChart12 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm12Change(barChartData12,3)}>Top 3</Button>
+                      <Button type={chartBtn.barChart12 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm12Change(barChartData12,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button type={chartBtn.barChart12 === 0 ? 'primary' : 'default'} onClick={() => handleTopXm12Change(barChartData12,0)} style={{ marginLeft: 8 }}>All</Button>
                     </div>{viewMode12 === 'chart' ? (
                       <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={barChartDatam12TopX.length > 0 ? barChartDatam12TopX : barChartData12}>
@@ -1057,9 +1099,9 @@ const Dashboard = () => {
                     <Col span={12}>
                     <h2>Top The Application Protocol</h2>
                     <div style={{ marginBottom: '10px' }}>
-                      <Button onClick={() => handleTopXm15Change(barChartData15,3)}>Top 3</Button>
-                      <Button onClick={() => handleTopXm15Change(barChartData15,5)} style={{ marginLeft: 8 }}>Top 5</Button>
-                      <Button onClick={() => handleTopXm15Change(barChartData15,0)} style={{ marginLeft: 8 }}>All</Button>
+                      <Button type={chartBtn.barChart15 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm15Change(barChartData15,3)}>Top 3</Button>
+                      <Button type={chartBtn.barChart15 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm15Change(barChartData15,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button type={chartBtn.barChart15 === 0 ? 'primary' : 'default'} onClick={() => handleTopXm15Change(barChartData15,0)} style={{ marginLeft: 8 }}>All</Button>
                     </div>{viewMode15 === 'chart' ? (
                       <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={barChartDatam15TopX.length > 0 ? barChartDatam15TopX : barChartData15}>
@@ -1083,9 +1125,9 @@ const Dashboard = () => {
                     <Col span={12}>
                     <h2>Top source port.</h2>
                     <div style={{ marginBottom: '10px' }}>
-                      <Button onClick={() => handleTopXm16Change(barChartData16,3)}>Top 3</Button>
-                      <Button onClick={() => handleTopXm16Change(barChartData16,5)} style={{ marginLeft: 8 }}>Top 5</Button>
-                      <Button onClick={() => handleTopXm16Change(barChartData16,10)} style={{ marginLeft: 8 }}>Top 10</Button>
+                      <Button type={chartBtn.barChart16 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm16Change(barChartData16,3)}>Top 3</Button>
+                      <Button type={chartBtn.barChart16 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm16Change(barChartData16,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button type={chartBtn.barChart16 === 0 ? 'primary' : 'default'} onClick={() => handleTopXm16Change(barChartData16,10)} style={{ marginLeft: 8 }}>Top 10</Button>
                     </div>{viewMode16 === 'chart' ? (
                       <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={barChartDatam16TopX.length > 0 ? barChartDatam16TopX : barChartData16}>
@@ -1107,9 +1149,9 @@ const Dashboard = () => {
                     <Col span={12}>
                     <h2>Top destination port.</h2>
                     <div style={{ marginBottom: '10px' }}>
-                      <Button onClick={() => handleTopXm17Change(barChartData17,3)}>Top 3</Button>
-                      <Button onClick={() => handleTopXm17Change(barChartData17,5)} style={{ marginLeft: 8 }}>Top 5</Button>
-                      <Button onClick={() => handleTopXm17Change(barChartData17,0)} style={{ marginLeft: 8 }}>All</Button>
+                      <Button type={chartBtn.barChart17 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm17Change(barChartData17,3)}>Top 3</Button>
+                      <Button type={chartBtn.barChart17 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm17Change(barChartData17,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button type={chartBtn.barChart17 === 0 ? 'primary' : 'default'} onClick={() => handleTopXm17Change(barChartData17,0)} style={{ marginLeft: 8 }}>All</Button>
                     </div>{viewMode17 === 'chart' ? (
                       <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={barChartDatam17TopX.length > 0 ? barChartDatam17TopX : barChartData17}>
@@ -1309,6 +1351,7 @@ const Dashboard = () => {
         </div>
       </div>
     </div>
+    </Spin>
   );
 };
 export default Dashboard;

@@ -25,8 +25,8 @@ export const uploadTrafficFile = async (file: File) => {
 };
 
 export const gettraffic = async () =>{
-    try {
-        const response = await apiClient.get('/traffic');
+    try {        
+        const response = await apiClient.get('/traffic');        
         return response.data;        
     }catch (error){
         console.error('Error fetching traffic:', error);
@@ -90,8 +90,8 @@ export const deletelogById = async (id: any) =>{
 };
 
 export const getlog = async () =>{
-    try {
-        const response = await apiClient.get('/log');
+    try {        
+        const response = await apiClient.get('/log');  
         return response.data;        
     }catch (error){
         console.error('Error fetching traffic:', error);

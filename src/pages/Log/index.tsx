@@ -1,5 +1,5 @@
 import { useState, useEffect, useLayoutEffect } from "react";
-import { Button, Col, Row, Tabs, Table, Input, Select , Menu,Card,Tooltip } from "antd";
+import { Button, Col, Row, Tabs, Table, Input, Select , Menu,Card,Tooltip, Spin } from "antd";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Label} from "recharts";
 import './styles.scss'; // Import file SCSS
 import { useParams } from "react-router-dom";
@@ -8,7 +8,7 @@ import ResizableTitle from "pages/App/subcomponents/MainLayout/subcomponents/Res
 import { SearchOutlined, FilterOutlined } from '@ant-design/icons';
 import { Modal } from 'antd';
 import { gettraffic, gettrafficById} from '../../services/apiService';
-import { color } from "d3";
+
 
 const stackedbarchartdata = [
   {
@@ -67,6 +67,13 @@ const COLORS = [
   '#2BBBAD', // Bright Cyan
 ];
 
+type ChartBtn = {
+  barChart4:number;
+  barChart5:number;
+  barChart6:number;
+  barChart7:number;
+  barChart8:number;
+}
 const Dashboard = () => {
   const styles = { backgroundColor: '#ffcccc !important',color:'red'}
   //log
@@ -104,6 +111,14 @@ const Dashboard = () => {
   //M13
   const [Data13, setData13] = useState([]);
 
+  const [chartBtn,setChartBtn] = useState<ChartBtn>({  
+    barChart4:0,
+    barChart5:10,
+    barChart6:0,
+    barChart7:10,
+    barChart8:10,});
+  
+  const [isLoading, setIsLoading] = useState(false);
   const dnsColumns = [
     { title: 'Line ID', dataIndex: 'LineId', key: 'lineId', width: 80 },
     { title: 'Timestamp', dataIndex: 'Timestamp', key: 'timestamp', width: 150 },
@@ -184,36 +199,38 @@ const Dashboard = () => {
   const handleTabChange = (key: string) => {
     setActiveTabKey(key);
   };
+  const fetchData = async () => {
+    setIsLoading(true);
+      const res = await getlogByID(id);
+    setLogType(res['typeLog']);//ok
+    setTableDatam1(res['m1']);//ok
+    // Process network data
+    setBarChartDatam2(res['m2'])
+    setLineChartDatam3(res['m3'])//ok
+    setBarChartDatam4(res['m4']);
+    setBarChartDatam5(res['m5']);
+      //Audit
+    setBarChartDatam6Audit(res['m6']);
+    setBarChartDatam7Audit(res['m7']);
+    setBarChartDatam8Audit(res['m8']);
+    setPieChartData9Audit(res['m9']);
+
+    //Access
+    setBarChartDatam6Access(res['m6'])
+    setBarChartDatam7Acsess(res['m7']);
+    setPieChartData8Access(res['m8']);
+    setPieChartData10Access(res['m10']);
+    setPieChartData9Access(res['m9']);
+
+    // setAnomalyTimestamps(res['m11'])
+    setAnomalyTimestamps(res['m11'] || []);
+    setData12(res['m12']);
+    setData13(res['m13']);
+    
+    setIsLoading(false)
+  }
   useLayoutEffect(() => {
-    getlogByID(id).then( async (res) =>{
-      await setLogType(res['typeLog']);//ok
-      setTableDatam1(res['m1']);//ok
-      // Process network data
-      setBarChartDatam2(res['m2'])
-      setLineChartDatam3(res['m3'])//ok
-      setBarChartDatam4(res['m4']);
-      setBarChartDatam5(res['m5']);
-        //Audit
-      setBarChartDatam6Audit(res['m6']);
-      setBarChartDatam7Audit(res['m7']);
-      setBarChartDatam8Audit(res['m8']);
-      setPieChartData9Audit(res['m9']);
-
-      //Access
-      setBarChartDatam6Access(res['m6'])
-      setBarChartDatam7Acsess(res['m7']);
-      setPieChartData8Access(res['m8']);
-      setPieChartData10Access(res['m10']);
-      setPieChartData9Access(res['m9']);
-
-      // setAnomalyTimestamps(res['m11'])
-      setAnomalyTimestamps(res['m11'] || []);
-      setData12(res['m12']);
-      setData13(res['m13']);
-
-    }).catch((error) => {
-      console.error("Error fetching log data:", error);
-    });
+    fetchData();
   }, [id]);
 
   useEffect(() => {
@@ -301,6 +318,7 @@ const Dashboard = () => {
 
   const handleTopXm4Change = (data: ChartData[],topX: number) => {
     setBarChartDatam4TopX(getTopXData(data, topX));
+    setChartBtn({...chartBtn, barChart4:topX});
     if (topX ===0) {
       setViewMode4('table'); // Chuyển sang chế độ bảng khi nhấn Top 10
     } else {
@@ -310,10 +328,12 @@ const Dashboard = () => {
   };
   const handleTopXm5Change = (data: ChartData[],topX: number) => {
     setBarChartDatam5TopX(getTopXData(data, topX));
+    setChartBtn({...chartBtn, barChart5:topX});
     // Trực tiếp cập nhật state với dữ liệu đã lọc mà không tạo biến trung gian
   };
   const handleTopXm6Change = (data: ChartData[],topX: number) => {
     setBarChartDatam6TopX(getTopXData(data, topX));
+    setChartBtn({...chartBtn, barChart6:topX});
     if (topX ===0) {
       setViewMode6('table'); // Chuyển sang chế độ bảng khi nhấn Top 10
     } else {
@@ -323,10 +343,14 @@ const Dashboard = () => {
   };
   const handleTopXm7Change = (data: ChartData[],topX: number) => {
     setBarChartDatam7TopX(getTopXData(data, topX));
+    setChartBtn({...chartBtn, barChart7:topX});
+
     // Trực tiếp cập nhật state với dữ liệu đã lọc mà không tạo biến trung gian
   };
   const handleTopXm8Change = (data: ChartData[],topX: number) => {
     setBarChartDatam8TopX(getTopXData(data, topX));
+    setChartBtn({...chartBtn, barChart8:topX});
+
     // Trực tiếp cập nhật state với dữ liệu đã lọc mà không tạo biến trung gian
   };
   //link traffic
@@ -461,6 +485,7 @@ const Dashboard = () => {
   const columnsWithButton = Array.isArray(columns) ? [...columns, actionColumn] : [actionColumn];
 
   return (
+        <Spin tip="Loading..." spinning={isLoading}>
     <div className="dashboard-page page">
       <div className="page-header">Dashboard</div>
       <div className="page-container">
@@ -617,9 +642,9 @@ const Dashboard = () => {
                     <h2>Top Source IPs by Number of DNS Events</h2>  
                      {/* Nhóm nút Top 3, Top 5, Top 10 */}
                     <div style={{ marginBottom: '10px' }}>
-                      <Button onClick={() => handleTopXm4Change(barChartDatam4,3)}>Top 3</Button>
-                      <Button onClick={() => handleTopXm4Change(barChartDatam4,5)} style={{ marginLeft: 8 }}>Top 5</Button>
-                      <Button onClick={() => handleTopXm4Change(barChartDatam4,0)} style={{ marginLeft: 8 }}>All</Button>
+                      <Button type={chartBtn.barChart4 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm4Change(barChartDatam4,3)}>Top 3</Button>
+                      <Button type={chartBtn.barChart4 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm4Change(barChartDatam4,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button type={chartBtn.barChart4 === 0 ? 'primary' : 'default'} onClick={() => handleTopXm4Change(barChartDatam4,0)} style={{ marginLeft: 8 }}>All</Button>
                     </div>{viewMode4 === 'chart' ? (            
                       <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={barChartDatam4TopX.length > 0 ? barChartDatam4TopX : barChartDatam4}>
@@ -641,9 +666,9 @@ const Dashboard = () => {
                     <Col span={12}>
                     <h2>Distribution of DNS Query Type</h2>
                     <div style={{ marginBottom: '10px' }}>
-                      <Button onClick={() => handleTopXm5Change(barChartDatam5,3)}>Top 3</Button>
-                      <Button onClick={() => handleTopXm5Change(barChartDatam5,5)} style={{ marginLeft: 8 }}>Top 5</Button>
-                      <Button onClick={() => handleTopXm5Change(barChartDatam5,10)} style={{ marginLeft: 8 }}>Top 10</Button>
+                      <Button type={chartBtn.barChart5 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm5Change(barChartDatam5,3)}>Top 3</Button>
+                      <Button type={chartBtn.barChart5 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm5Change(barChartDatam5,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button type={chartBtn.barChart5 === 10 ? 'primary' : 'default'} onClick={() => handleTopXm5Change(barChartDatam5,10)} style={{ marginLeft: 8 }}>Top 10</Button>
                     </div>  
                       <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={barChartDatam5TopX.length > 0 ? barChartDatam5TopX : barChartDatam5}>
@@ -751,9 +776,9 @@ const Dashboard = () => {
                   <Col span={12}>  
                   <h2>Event type</h2>     
                   <div style={{ marginBottom: '10px' }}>
-                      <Button onClick={() => handleTopXm4Change(barChartDatam4,3)}>Top 3</Button>
-                      <Button onClick={() => handleTopXm4Change(barChartDatam4,5)} style={{ marginLeft: 8 }}>Top 5</Button>
-                      <Button onClick={() => handleTopXm4Change(barChartDatam4,0)} style={{ marginLeft: 8 }}>All</Button>
+                      <Button type={chartBtn.barChart4 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm4Change(barChartDatam4,3)}>Top 3</Button>
+                      <Button type={chartBtn.barChart4 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm4Change(barChartDatam4,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button type={chartBtn.barChart4 === 0 ? 'primary' : 'default'} onClick={() => handleTopXm4Change(barChartDatam4,0)} style={{ marginLeft: 8 }}>All</Button>
                     </div>{viewMode4 === 'chart' ? (               
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={barChartDatam4TopX.length > 0 ? barChartDatam4TopX : barChartDatam4}>
@@ -775,9 +800,9 @@ const Dashboard = () => {
                   <Col span={12}>
                   <h2>Account activity</h2>
                   <div style={{ marginBottom: '10px' }}>
-                      <Button onClick={() => handleTopXm5Change(barChartDatam5,3)}>Top 3</Button>
-                      <Button onClick={() => handleTopXm5Change(barChartDatam5,5)} style={{ marginLeft: 8 }}>Top 5</Button>
-                      <Button onClick={() => handleTopXm5Change(barChartDatam5,10)} style={{ marginLeft: 8 }}>Top 10</Button>
+                      <Button type={chartBtn.barChart5 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm5Change(barChartDatam5,3)}>Top 3</Button>
+                      <Button type={chartBtn.barChart5 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm5Change(barChartDatam5,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button type={chartBtn.barChart5 === 10 ? 'primary' : 'default'} onClick={() => handleTopXm5Change(barChartDatam5,10)} style={{ marginLeft: 8 }}>Top 10</Button>
                     </div>  
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={barChartDatam5TopX.length > 0 ? barChartDatam5TopX : barChartDatam5}>
@@ -799,9 +824,9 @@ const Dashboard = () => {
                   <Col span={12}>  
                   <h2>PID</h2>   
                   <div style={{ marginBottom: '10px' }}>
-                      <Button onClick={() => handleTopXm6Change(barChartDatam6Audit,3)}>Top 3</Button>
-                      <Button onClick={() => handleTopXm6Change(barChartDatam6Audit,5)} style={{ marginLeft: 8 }}>Top 5</Button>
-                      <Button onClick={() => handleTopXm6Change(barChartDatam6Audit,0)} style={{ marginLeft: 8 }}>All</Button>
+                      <Button type={chartBtn.barChart6 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm6Change(barChartDatam6Audit,3)}>Top 3</Button>
+                      <Button type={chartBtn.barChart6 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm6Change(barChartDatam6Audit,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button type={chartBtn.barChart6 === 0 ? 'primary' : 'default'} onClick={() => handleTopXm6Change(barChartDatam6Audit,0)} style={{ marginLeft: 8 }}>All</Button>
                     </div>{viewMode6 === 'chart' ? (           
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={barChartDatam6TopX.length > 0 ? barChartDatam6TopX : barChartDatam6Audit}>
@@ -823,9 +848,9 @@ const Dashboard = () => {
                   <Col span={12}>
                   <h2>UID</h2>
                   <div style={{ marginBottom: '10px' }}>
-                      <Button onClick={() => handleTopXm7Change(barChartDatam7Audit,3)}>Top 3</Button>
-                      <Button onClick={() => handleTopXm7Change(barChartDatam7Audit,5)} style={{ marginLeft: 8 }}>Top 5</Button>
-                      <Button onClick={() => handleTopXm7Change(barChartDatam7Audit,10)} style={{ marginLeft: 8 }}>Top 10</Button>
+                      <Button type={chartBtn.barChart7 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm7Change(barChartDatam7Audit,3)}>Top 3</Button>
+                      <Button type={chartBtn.barChart7 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm7Change(barChartDatam7Audit,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button type={chartBtn.barChart7 === 10 ? 'primary' : 'default'} onClick={() => handleTopXm7Change(barChartDatam7Audit,10)} style={{ marginLeft: 8 }}>Top 10</Button>
                     </div>  
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={barChartDatam7TopX.length > 0 ? barChartDatam7TopX : barChartDatam7Audit}>
@@ -847,9 +872,9 @@ const Dashboard = () => {
                   <Col span={12}>  
                   <h2>EXE</h2> 
                   <div style={{ marginBottom: '10px' }}>
-                      <Button onClick={() => handleTopXm8Change(barChartDatam8Audit,3)}>Top 3</Button>
-                      <Button onClick={() => handleTopXm8Change(barChartDatam8Audit,5)} style={{ marginLeft: 8 }}>Top 5</Button>
-                      <Button onClick={() => handleTopXm8Change(barChartDatam8Audit,10)} style={{ marginLeft: 8 }}>Top 10</Button>
+                      <Button type={chartBtn.barChart8 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm8Change(barChartDatam8Audit,3)}>Top 3</Button>
+                      <Button type={chartBtn.barChart8 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm8Change(barChartDatam8Audit,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button type={chartBtn.barChart8 === 10 ? 'primary' : 'default'} onClick={() => handleTopXm8Change(barChartDatam8Audit,10)} style={{ marginLeft: 8 }}>Top 10</Button>
                     </div>               
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={barChartDatam8TopX.length > 0 ? barChartDatam8TopX : barChartDatam8Audit}>
@@ -980,9 +1005,9 @@ const Dashboard = () => {
                   <Col span={12}>  
                   <h2>Top Frequent Values in Client_IP</h2>  
                   <div style={{ marginBottom: '10px' }}>
-                      <Button onClick={() => handleTopXm4Change(barChartDatam4,3)}>Top 3</Button>
-                      <Button onClick={() => handleTopXm4Change(barChartDatam4,5)} style={{ marginLeft: 8 }}>Top 5</Button>
-                      <Button onClick={() => handleTopXm4Change(barChartDatam4,10)} style={{ marginLeft: 8 }}>Top 10</Button>
+                      <Button type={chartBtn.barChart4 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm4Change(barChartDatam4,3)}>Top 3</Button>
+                      <Button type={chartBtn.barChart4 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm4Change(barChartDatam4,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button type={chartBtn.barChart4 === 0 ? 'primary' : 'default'} onClick={() => handleTopXm4Change(barChartDatam4,0)} style={{ marginLeft: 8 }}>All</Button>
                     </div>              
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={barChartDatam4TopX.length > 0 ? barChartDatam4TopX : barChartDatam4}>
@@ -1003,9 +1028,9 @@ const Dashboard = () => {
                   <Col span={12}>
                   <h2>Histogram Of Filtered Data</h2>
                   <div style={{ marginBottom: '10px' }}>
-                      <Button onClick={() => handleTopXm5Change(barChartDatam5,3)}>Top 3</Button>
-                      <Button onClick={() => handleTopXm5Change(barChartDatam5,5)} style={{ marginLeft: 8 }}>Top 5</Button>
-                      <Button onClick={() => handleTopXm5Change(barChartDatam5,10)} style={{ marginLeft: 8 }}>Top 10</Button>
+                      <Button type={chartBtn.barChart5 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm5Change(barChartDatam5,3)}>Top 3</Button>
+                      <Button type={chartBtn.barChart5 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm5Change(barChartDatam5,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button type={chartBtn.barChart5 === 10 ? 'primary' : 'default'} onClick={() => handleTopXm5Change(barChartDatam5,10)} style={{ marginLeft: 8 }}>Top 10</Button>
                     </div>  
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={barChartDatam5TopX.length > 0 ? barChartDatam5TopX : barChartDatam5}>
@@ -1027,9 +1052,9 @@ const Dashboard = () => {
                 <Col span={12}>  
                   <h2>HTTP Methods by Status Code</h2>
                   <div style={{ marginBottom: '10px' }}>
-                      <Button onClick={() => handleTopXm6Change(barChartDatam6Access,3)}>Top 3</Button>
-                      <Button onClick={() => handleTopXm6Change(barChartDatam6Access,5)} style={{ marginLeft: 8 }}>Top 5</Button>
-                      <Button onClick={() => handleTopXm6Change(barChartDatam6Access,10)} style={{ marginLeft: 8 }}>Top 10</Button>
+                      <Button type={chartBtn.barChart6 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm6Change(barChartDatam6Access,3)}>Top 3</Button>
+                      <Button type={chartBtn.barChart6 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm6Change(barChartDatam6Access,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button type={chartBtn.barChart6 === 10 ? 'primary' : 'default'} onClick={() => handleTopXm6Change(barChartDatam6Access,10)} style={{ marginLeft: 8 }}>Top 10</Button>
                     </div>               
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={barChartDatam6TopX.length > 0 ? barChartDatam6TopX : barChartDatam6Access}>
@@ -1257,7 +1282,9 @@ const Dashboard = () => {
         </div>
       </div>
     </div>
+        </Spin>
   );
 };
+
 
 export default Dashboard;
