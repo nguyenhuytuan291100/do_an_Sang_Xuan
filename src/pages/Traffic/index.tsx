@@ -122,7 +122,7 @@ const Dashboard = () => {
     // { title: 'Flow ID', dataIndex: 'Flow ID', key: 'flowID', width: 100 },
     { title: 'Timestamp', dataIndex: 'Timestamp', key: 'timestamp', width: 120 },
     { title: 'Source IP', dataIndex: 'Source IP', key: 'srcIP', width: 150 },
-    { title: 'Destination IP', dataIndex: 'Destination IP', key: 'dstIP', width: 150 },
+    { title: 'Destination IP', dataIndex: 'Destination IP', key: 'dstIP', width: 100 },
     { title: 'Source Port', dataIndex: 'Source Port', key: 'srcPort', width: 90 },
     { title: 'Destination Port', dataIndex: 'Destination Port', key: 'dstPort', width: 120 },
     { title: 'Protocol', dataIndex: 'Protocol', key: 'protocol', width: 100 },
@@ -133,7 +133,7 @@ const Dashboard = () => {
     { title: 'Tot Bwd Pkts', dataIndex: 'Tot Bwd Pkts', key: 'totBwdPkts', width: 100 },
     { title: 'TotLen Fwd Pkts', dataIndex: 'TotLen Fwd Pkts', key: 'totLenFwdPkts', width: 100 },
     { title: 'TotLen Bwd Pkts', dataIndex: 'TotLen Bwd Pkts', key: 'totLenBwdPkts', width: 100 },
-    { title: 'Tot Pkts', dataIndex: 'Tot Pkts', key: 'totPkts', width: 100 },
+    { title: 'Tot Pkts', dataIndex: 'Tot Pkts', key: 'totPkts', width: 60 },
     { title: 'Label', dataIndex: 'Label', key: 'labl', width: 90 },
     { title: 'Confidence Score', dataIndex: 'Conference', key: 'conference', width: 110 },
   ]);
@@ -339,6 +339,7 @@ const Dashboard = () => {
   const [isModalVisible1, setIsModalVisible1] = useState(false);
   const [isModalVisiblePayload, setIsModalVisiblePayload] = useState(false);
   const [modalContent, setModalContent] = useState<string | null>(null);
+  const [extractedData, setExtractedData] = useState<any[]>([]);
   const [selectedTraficRecord, setSelectedTrafficRecord] = useState<TrafficRecord | null>(null);
   const [logFiles, setlogFiles] = useState<string[]>([]);  // Trạng thái để lưu trữ các tệp đã tải lên cho Traffic
   const [logData, setLogData] = useState([]);
@@ -515,14 +516,152 @@ const Dashboard = () => {
     setIsModalVisible1(state);
   };
   //show Payload
+
+  
   const showModalPaylaod = (record: TrafficRecord) => {
-    setModalContent(record.Payload); // Lấy payload từ record và lưu vào state
+    const payload = record.Payload; // Lấy payload từ record
+  
+    // Làm sạch dữ liệu trước khi thêm mới
+    setExtractedData([]); // Đảm bảo dữ liệu cũ được xóa trước khi thêm mới
+  
+    setModalContent(payload); // Hiển thị payload đã giải mã
     setIsModalVisiblePayload(true); // Hiển thị modal
   };
+  
+  // Dùng useEffect để theo dõi khi extractedData được reset thành mảng rỗng, sau đó thực hiện các bước tiếp theo.
+  useEffect(() => {
+    if (extractedData.length === 0 && modalContent !== '') {
+      const decodedPayload = modalContent; // Lấy payload đã được giải mã
+  
+      if (!decodedPayload) {
+        return; // Nếu payload là null hoặc không tồn tại, dừng lại
+      }
+  
+      // Giải mã nếu payload được mã hóa
+      const isBase64 = (str: string) => {
+        try {
+          return btoa(atob(str)) === str; // Kiểm tra nếu chuỗi là Base64
+        } catch (err) {
+          return false;
+        }
+      };
+  
+      const decodeHex = (hex: string) => {
+        const hexStr = hex.toString();
+        let str = '';
+        for (let i = 0; i < hexStr.length; i += 2) {
+          str += String.fromCharCode(parseInt(hexStr.substr(i, 2), 16));
+        }
+        return str;
+      };
+  
+      let processedPayload = decodedPayload;
+  
+      if (isBase64(decodedPayload)) {
+        // Giải mã Base64 nếu payload là Base64
+        processedPayload = atob(decodedPayload);
+      } else if (/^[0-9a-fA-F]+$/.test(decodedPayload)) {
+        // Giải mã Hex nếu payload là chuỗi Hex
+        processedPayload = decodeHex(decodedPayload);
+      }
+  
+      // Nếu processedPayload là null, không tiếp tục xử lý
+      if (!processedPayload) {
+        return;
+      }
+  
+      // Regex để nhận diện email với các domain hợp lệ như yahoo, gmail, edu, gov, v.v.
+      const emailRegex = /[a-zA-Z0-9._%+-]+@(gmail|yahoo|edu|gov|hotmail)\.[a-zA-Z]{2,}/g;
+      const documentRegex = /\b\w+_\d{4}\.xlsx\b/g;
+      const idRegex = /-\.(\d+)-/g; // Nhận diện ID nằm giữa dấu "-." và "-"
+      const contentRegex = /-#[A-Za-z0-9/.*]+/g; // Nhận diện content với tiền tố "-#"
+  
+      // Trích xuất các phần tử bằng regex
+      let emails = Array.from(new Set(processedPayload.match(emailRegex) || [])); // Loại bỏ email trùng lặp
+      const documents = Array.from(new Set(processedPayload.match(documentRegex) || [])); // Tài liệu
+      const ids = Array.from(new Set((processedPayload.match(idRegex) || []).map(match => match.slice(1)))); // Trích xuất ID giữa "-." và "-"
+      // const contents = Array.from(new Set(processedPayload.match(contentRegex) || [])); // Gom content
+      const contents = Array.from(new Set(processedPayload.match(contentRegex) || [])).filter(content => content.length >= 10 && !/\.{3,}/.test(content)); 
+      const userRegex = /email-([a-zA-Z0-9.-]+)-([a-zA-Z0-9.-]+)\.([a-zA-Z]{2,})/;
+      const userMatch = processedPayload.match(userRegex); // Trích xuất username và domain
+      // Danh sách các TLD hợp lệ
+      const allowedTLDs = [
+        'com', 'net', 'info', 'io', 'org', 'gov', 'edu', 'vn', 'biz', 'mil', 
+        'us', 'uk', 'xyz', 'tech', 'store', 'online', 'site',
+        'me', 'tv', 'ai', 'app',
+      ];
+  
+      // Hàm để đọc ngược chuỗi domain đến khi gặp dấu hiệu dừng
+      const extractDomain = (text: string, tld: string) => {
+        const tldIndex = text.lastIndexOf(tld); // Tìm vị trí của TLD
+        if (tldIndex === -1) return null;
+  
+        let domain = tld; // Domain sẽ chứa ít nhất TLD
+        // Đọc ngược về trước để tìm ranh giới domain
+        for (let i = tldIndex - 1; i >= 0; i--) {
+          const char = text[i];
+          if (char === '.' && text[i - 1] === '.') {
+            // Dừng lại nếu gặp hai dấu chấm liên tiếp
+            break;
+          }
+          if (char === '#' || char === '-') {
+            // Dừng lại nếu gặp ký tự đặc biệt như # hoặc -
+            break;
+          }
+          domain = char + domain; // Thêm ký tự vào domain
+        }
+        return domain;
+      };
+  
+      // Tìm tất cả các domain trong payload
+      let domains: string[] = [];
+      allowedTLDs.forEach(tld => {
+        const domain = extractDomain(processedPayload, `.${tld}`);
+        if (domain) {
+          domains.push(domain);
+        }
+      });
+  
+      // Loại bỏ các domain trùng lặp bằng Set
+      domains = [...new Set(domains)];
+  
+      // Lọc domain với các TLD hợp lệ và loại bỏ các dấu chấm liên tiếp
+      domains = domains.filter((domain: string) => {
+        const parts = domain.split('.');
+        const tld = parts[parts.length - 1]; // Lấy phần TLD
+        return allowedTLDs.includes(tld) && parts.every((part: string) => part.length >= 2);
+      });
+
+      let username = '';
+      let domain = '';
+      if (userMatch && userMatch.length >= 4) {
+        username = userMatch[1]; // Trích xuất username (ví dụ: 19.kennedy)
+        domain = `${userMatch[2]}.${userMatch[3]}`; // Trích xuất domain (ví dụ: mendoza.info)
+      }
+  
+      // Đảm bảo các dữ liệu được chia tách rõ ràng
+      const extracted = [
+        ...emails.map((email) => ({ type: 'Email', value: email })),
+        ...documents.map((doc) => ({ type: 'Document', value: doc })),
+        ...ids.map((id) => ({ type: 'ID', value: id })), // ID giữ riêng
+        ...contents.map((content) => ({ type: 'Content', value: content })), // Content giữ riêng
+        ...domains.map(domain => ({ type: 'Domain', value: domain })), // Thêm các domain hợp lệ
+        ...(username ? [{ type: 'Username', value: username }] : []), // Thêm username nếu có
+      ];
+  
+      // Cập nhật lại state với dữ liệu mới đã được lọc
+      setExtractedData(extracted); // Lưu dữ liệu trích xuất vào state
+    }
+  }, [extractedData, modalContent]);
+  
   const handleOk = () => {
     setIsModalVisiblePayload(false); // Đóng modal khi nhấn OK
+    setExtractedData([]); // Reset dữ liệu trích xuất
+    setModalContent(''); // Reset payload
   };
   const handleCancelPayload = () => {
+    setExtractedData([]); // Reset dữ liệu trích xuất
+    setModalContent(''); // Reset payload
     setIsModalVisiblePayload(false); // Đóng modal khi nhấn Cancel
   };
   const handleOnClickTraffic = async (logid: any)=>{
@@ -594,7 +733,7 @@ const Dashboard = () => {
   const actionColumn = {
     title: 'Action',
     key: 'action',
-    width: 250, // Tăng kích thước cột nếu cần để chứa cả 2 nút
+    width: 125, // Tăng kích thước cột nếu cần để chứa cả 2 nút
     render: (text: any, record: TrafficRecord) => (
       <Space size="middle">
         {/* Nút Tìm kiếm Log */}
@@ -611,8 +750,8 @@ const Dashboard = () => {
   const columnsWithButton = Array.isArray(columns) ? [...columns, actionColumn] : [actionColumn];
   
   return (
-    <Spin tip="Loading..." spinning={isLoading}>
-    <div className="dashboard-page page">
+    <Spin tip="Loading..." spinning={isLoading} >
+    <div className="dashboard-page page" >
       <div className="page-header">Dashboard</div>
       <div className="page-container">
         <div className="page-content">
@@ -1345,8 +1484,20 @@ const Dashboard = () => {
         visible={isModalVisiblePayload}
         onOk={handleOk}
         onCancel={handleCancelPayload}
+        width={800}
       >
-        <p>{modalContent}</p> {/* Hiển thị dữ liệu payload trong modal */}
+        <p>{modalContent}</p> {/* Hiển thị dữ liệu payload gốc trong modal */}
+        
+        <h3>Trích xuất thông tin nhạy cảm</h3>
+        <Table
+          dataSource={extractedData}
+          columns={[
+            { title: 'Loại Dữ Liệu', dataIndex: 'type', key: 'type' },
+            { title: 'Giá Trị', dataIndex: 'value', key: 'value' },
+          ]}
+          pagination={false}
+          rowKey="value"
+        />
       </Modal>
         </div>
       </div>

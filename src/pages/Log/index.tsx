@@ -123,8 +123,8 @@ const Dashboard = () => {
     { title: 'Line ID', dataIndex: 'LineId', key: 'lineId', width: 80 },
     { title: 'Timestamp', dataIndex: 'Timestamp', key: 'timestamp', width: 150 },
     { title: 'Process', dataIndex: 'Process', key: 'process', width: 120 },
-    { title: 'Content', dataIndex: 'Content', key: 'content', width: 200 },
-    { title: 'Event Template', dataIndex: 'EventTemplate', key: 'eventTemplate', width: 180 },
+    { title: 'Content', dataIndex: 'Content', key: 'content', width: 400 },
+    { title: 'Event Template', dataIndex: 'EventTemplate', key: 'eventTemplate', width: 360 },
     { title: 'Label', dataIndex: 'Anomaly', key: 'label', width: 100 },
   ];
   const auditColumns = [
@@ -134,7 +134,7 @@ const Dashboard = () => {
     { title: 'Process ID', dataIndex: 'pid', key: 'pid', width: 100 },
     { title: 'User ID', dataIndex: 'uid', key: 'uid', width: 100 },
     { title: 'Session ID', dataIndex: 'ses', key: 'ses', width: 100 },
-    { title: 'Message', dataIndex: 'msg', key: 'msg', width: 300 },
+    { title: 'Message', dataIndex: 'msg', key: 'msg', width: 100 },
     { title: 'Account', dataIndex: 'acct', key: 'acct', width: 150 },
     { title: 'Executable', dataIndex: 'exe', key: 'exe', width: 200 },
     { title: 'Hostname', dataIndex: 'hostname', key: 'hostname', width: 150 },
@@ -152,7 +152,7 @@ const Dashboard = () => {
     { title: 'Response Bytes', dataIndex: 'Response_Bytes', key: 'responseBytes', width: 150 },
     { title: 'Refer', dataIndex: 'Refer', key: 'refer', width: 150 },
     { title: 'Method', dataIndex: 'Method', key: 'method', width: 100 },
-    { title: 'Path', dataIndex: 'Path', key: 'path', width: 200 },
+    { title: 'Path', dataIndex: 'Path', key: 'path', width:150 },
     { title: 'Version', dataIndex: 'Version', key: 'version', width: 100 },
     { title: 'User Agent', dataIndex: 'User_Agent', key: 'userAgent', width: 200 },
     { title: 'Label', dataIndex: 'Anomaly', key: 'label', width: 100 },
@@ -485,8 +485,8 @@ const Dashboard = () => {
   const columnsWithButton = Array.isArray(columns) ? [...columns, actionColumn] : [actionColumn];
 
   return (
-        <Spin tip="Loading..." spinning={isLoading}>
-    <div className="dashboard-page page">
+        <Spin tip="Loading..." spinning={isLoading} className="all">
+    <div className=" page">
       <div className="page-header">Dashboard</div>
       <div className="page-container">
         <div className="page-content">
@@ -899,7 +899,7 @@ const Dashboard = () => {
                             data={PieChartData9Audit}
                             cx="50%"
                             cy="50%"
-                            outerRadius={80}
+                            outerRadius={120}
                             fill="#8884d8"
                             dataKey="value"
                             label
@@ -1098,7 +1098,7 @@ const Dashboard = () => {
                             data={PieChartData8Access}
                             cx="50%"
                             cy="50%"
-                            outerRadius={80}
+                            outerRadius={120}
                             fill="#8884d8"
                             dataKey="value"
                             label
@@ -1119,7 +1119,7 @@ const Dashboard = () => {
                             data={PieChartData9Access}
                             cx="50%"
                             cy="50%"
-                            outerRadius={80}
+                            outerRadius={120}
                             fill="#8884d8"
                             dataKey="value"
                             label
@@ -1133,14 +1133,14 @@ const Dashboard = () => {
                       </ResponsiveContainer>
                   </Col>
                   <Col span={8}>
-                  <h2>Distribution of Version</h2>
+                  <h2>Distribution of Method</h2>
                   <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
                           <Pie
                             data={PieChartData10Access}
                             cx="50%"
                             cy="50%"
-                            outerRadius={80}
+                            outerRadius={120}
                             fill="#8884d8"
                             dataKey="value"
                             label

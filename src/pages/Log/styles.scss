@@ -1,37 +1,76 @@
-.dashboard-page {
+.all{
+  width: 100%; // Ensure the container spans the full width
+  display: inline;
+  .dashboard-page {
+
+    // Style for the page header
     .page-header {
+      width: 100%; // Ensure the container spans the full width
       font-size: 24px;
       font-weight: bold;
       margin-bottom: 20px;
     }
-  
+
+    // Container for the page content
     .page-container {
+      width: 100%; // Ensure the container spans the full width
+
       .page-content {
+        width: 100%; // Ensure the content takes full width
+        display: flex;
+        flex-direction: column; // Organize content vertically
+
+        // Row for charts or other elements
         .chart-row {
           margin-top: 20px;
-  
+          display: flex; // Flexbox to handle layout
+          flex-direction: row;
+          justify-content: space-between; // Space out columns
+          
+          // Individual columns inside the chart row
           .ant-col {
             background: #f0f2f5;
             padding: 10px;
             border-radius: 4px;
+            flex-grow: 1; // Allow the columns to grow and take space
           }
         }
       }
-    }  
+    }
+
+    // Styles for custom tables
     .custom-table {
+      width: 100%; // Make sure the table uses the full width
+      display: block;
+
+      // Table header styling
       .ant-table-thead > tr > th {
         background-color: #f0f0f0;
         cursor: pointer;
-        
+        width: 100%; // Ensure table headers take full width
       }
-      
-    }
 
-    .anomaly-row {
-      background-color: #ffcccc !important;
+      // Table body row for anomalies
+      .anomaly-row {
+        background-color: #ffcccc !important;
+      }
     }
-    
   }
-.anomaly-row {
-    background-color: #ffcccc !important;}
 
+  // General anomaly row styling
+  .anomaly-row {
+    background-color: #ffcccc !important;
+  }
+
+  // Responsive styling for smaller screens
+  @media (max-width: 768px) {
+    .custom-table {
+      overflow-x: auto; // Allow horizontal scrolling on smaller screens
+      display: block; // Ensure block layout for small screens
+    }
+
+    .ant-table-thead > tr > th {
+      width: auto; // Adjust table headers to fit smaller screens
+    }
+  }
+}
