@@ -122,7 +122,7 @@ const Dashboard = () => {
     // { title: 'Flow ID', dataIndex: 'Flow ID', key: 'flowID', width: 100 },
     { title: 'Timestamp', dataIndex: 'Timestamp', key: 'timestamp', width: 120 },
     { title: 'Source IP', dataIndex: 'Source IP', key: 'srcIP', width: 150 },
-    { title: 'Destination IP', dataIndex: 'Destination IP', key: 'dstIP', width: 100 },
+    { title: 'Destination IP', dataIndex: 'Destination IP', key: 'dstIP', width: 150 },
     { title: 'Source Port', dataIndex: 'Source Port', key: 'srcPort', width: 90 },
     { title: 'Destination Port', dataIndex: 'Destination Port', key: 'dstPort', width: 120 },
     { title: 'Protocol', dataIndex: 'Protocol', key: 'protocol', width: 100 },
@@ -518,73 +518,209 @@ const Dashboard = () => {
   //show Payload
 
   
+  // const showModalPaylaod = (record: TrafficRecord) => {
+  //   const payload = record.Payload; // Lấy payload từ record
+  
+  //   // Làm sạch dữ liệu trước khi thêm mới
+  //   setExtractedData([]); // Đảm bảo dữ liệu cũ được xóa trước khi thêm mới
+  
+  //   setModalContent(payload); // Hiển thị payload đã giải mã
+  //   setIsModalVisiblePayload(true); // Hiển thị modal
+  // };
+  
+  // // Dùng useEffect để theo dõi khi extractedData được reset thành mảng rỗng, sau đó thực hiện các bước tiếp theo.
+  // useEffect(() => {
+  //   if (extractedData.length === 0 && modalContent !== '') {
+  //     const decodedPayload = modalContent; // Lấy payload đã được giải mã
+  
+  //     if (!decodedPayload) {
+  //       return; // Nếu payload là null hoặc không tồn tại, dừng lại
+  //     }
+  
+  //     // Giải mã nếu payload được mã hóa
+  //     const isBase64 = (str: string) => {
+  //       try {
+  //         return btoa(atob(str)) === str; // Kiểm tra nếu chuỗi là Base64
+  //       } catch (err) {
+  //         return false;
+  //       }
+  //     };
+  
+  //     const decodeHex = (hex: string) => {
+  //       const hexStr = hex.toString();
+  //       let str = '';
+  //       for (let i = 0; i < hexStr.length; i += 2) {
+  //         str += String.fromCharCode(parseInt(hexStr.substr(i, 2), 16));
+  //       }
+  //       return str;
+  //     };
+  
+  //     let processedPayload = decodedPayload;
+  
+  //     if (isBase64(decodedPayload)) {
+  //       // Giải mã Base64 nếu payload là Base64
+  //       processedPayload = atob(decodedPayload);
+  //     } else if (/^[0-9a-fA-F]+$/.test(decodedPayload)) {
+  //       // Giải mã Hex nếu payload là chuỗi Hex
+  //       processedPayload = decodeHex(decodedPayload);
+  //     }
+  
+  //     // Nếu processedPayload là null, không tiếp tục xử lý
+  //     if (!processedPayload) {
+  //       return;
+  //     }
+  
+  //     // Regex để nhận diện email với các domain hợp lệ như yahoo, gmail, edu, gov, v.v.
+  //     const emailRegex = /[a-zA-Z0-9._%+-]+@(gmail|yahoo|edu|gov|hotmail)\.[a-zA-Z]{2,}/g;
+  //     const documentRegex = /\b\w+_\d{4}\.xlsx\b/g;
+  //     const idRegex = /-\.(\d+)-/g; // Nhận diện ID nằm giữa dấu "-." và "-"
+  //     const contentRegex = /-#[A-Za-z0-9/.*]+/g; // Nhận diện content với tiền tố "-#"
+  
+  //     // Trích xuất các phần tử bằng regex
+  //     let emails = Array.from(new Set(processedPayload.match(emailRegex) || [])); // Loại bỏ email trùng lặp
+  //     const documents = Array.from(new Set(processedPayload.match(documentRegex) || [])); // Tài liệu
+  //     const ids = Array.from(new Set((processedPayload.match(idRegex) || []).map(match => match.slice(1)))); // Trích xuất ID giữa "-." và "-"
+  //     const contents = Array.from(new Set(processedPayload.match(contentRegex) || [])).filter(content => content.length >= 10 && !/\.{3,}/.test(content)); 
+  //     const userRegex = /email-([a-zA-Z0-9.-]+)-([a-zA-Z0-9.-]+)\.([a-zA-Z]{2,})/;
+  //     const userMatch = processedPayload.match(userRegex); // Trích xuất username và domain
+  //     // Danh sách các TLD hợp lệ
+  //     const allowedTLDs = [
+  //       'com', 'net', 'info', 'io', 'org', 'gov', 'edu', 'vn', 'biz', 'mil', 
+  //       'us', 'uk', 'xyz', 'tech', 'store', 'online', 'site',
+  //       'me', 'tv', 'ai', 'app',
+  //     ];
+  
+  //     // Hàm để đọc ngược chuỗi domain đến khi gặp dấu hiệu dừng
+  //     const extractDomain = (text: string, tld: string) => {
+  //       const tldIndex = text.lastIndexOf(tld); // Tìm vị trí của TLD
+  //       if (tldIndex === -1) return null;
+  
+  //       let domain = tld; // Domain sẽ chứa ít nhất TLD
+  //       // Đọc ngược về trước để tìm ranh giới domain
+  //       for (let i = tldIndex - 1; i >= 0; i--) {
+  //         const char = text[i];
+  //         if (char === '.' && text[i - 1] === '.') {
+  //           // Dừng lại nếu gặp hai dấu chấm liên tiếp
+  //           break;
+  //         }
+  //         if (char === '#' || char === '-') {
+  //           // Dừng lại nếu gặp ký tự đặc biệt như # hoặc -
+  //           break;
+  //         }
+  //         domain = char + domain; // Thêm ký tự vào domain
+  //       }
+  //       return domain;
+  //     };
+  
+  //     // Tìm tất cả các domain trong payload
+  //     let domains: string[] = [];
+  //     allowedTLDs.forEach(tld => {
+  //       const domain = extractDomain(processedPayload, `.${tld}`);
+  //       if (domain) {
+  //         domains.push(domain);
+  //       }
+  //     });
+  
+  //     // Loại bỏ các domain trùng lặp bằng Set
+  //     domains = [...new Set(domains)];
+  
+  //     // Lọc domain với các TLD hợp lệ và loại bỏ các dấu chấm liên tiếp
+  //     domains = domains.filter((domain: string) => {
+  //       const parts = domain.split('.');
+  //       const tld = parts[parts.length - 1]; // Lấy phần TLD
+  //       return allowedTLDs.includes(tld) && parts.every((part: string) => part.length >= 2);
+  //     });
+
+  //     let username = '';
+  //     let domain = '';
+  //     if (userMatch && userMatch.length >= 4) {
+  //       username = userMatch[1]; // Trích xuất username (ví dụ: 19.kennedy)
+  //       domain = `${userMatch[2]}.${userMatch[3]}`; // Trích xuất domain (ví dụ: mendoza.info)
+  //     }
+  
+  //     // Đảm bảo các dữ liệu được chia tách rõ ràng
+  //     const extracted = [
+  //       ...emails.map((email) => ({ type: 'Email', value: email })),
+  //       ...documents.map((doc) => ({ type: 'Document', value: doc })),
+  //       ...ids.map((id) => ({ type: 'ID', value: id })), // ID giữ riêng
+  //       ...contents.map((content) => ({ type: 'Content', value: content })), // Content giữ riêng
+  //       ...domains.map(domain => ({ type: 'Domain', value: domain })), // Thêm các domain hợp lệ
+  //       ...(username ? [{ type: 'Username', value: username }] : []), // Thêm username nếu có
+  //     ];
+  
+  //     // Cập nhật lại state với dữ liệu mới đã được lọc
+  //     setExtractedData(extracted); // Lưu dữ liệu trích xuất vào state
+  //   }
+  // }, [extractedData, modalContent]);
   const showModalPaylaod = (record: TrafficRecord) => {
     const payload = record.Payload; // Lấy payload từ record
-  
+
     // Làm sạch dữ liệu trước khi thêm mới
     setExtractedData([]); // Đảm bảo dữ liệu cũ được xóa trước khi thêm mới
-  
+
     setModalContent(payload); // Hiển thị payload đã giải mã
     setIsModalVisiblePayload(true); // Hiển thị modal
-  };
-  
-  // Dùng useEffect để theo dõi khi extractedData được reset thành mảng rỗng, sau đó thực hiện các bước tiếp theo.
+};
+
+// Dùng useEffect để theo dõi khi extractedData được reset thành mảng rỗng, sau đó thực hiện các bước tiếp theo.
   useEffect(() => {
     if (extractedData.length === 0 && modalContent !== '') {
       const decodedPayload = modalContent; // Lấy payload đã được giải mã
-  
+
       if (!decodedPayload) {
-        return; // Nếu payload là null hoặc không tồn tại, dừng lại
+          return; // Nếu payload là null hoặc không tồn tại, dừng lại
       }
-  
+
       // Giải mã nếu payload được mã hóa
       const isBase64 = (str: string) => {
-        try {
-          return btoa(atob(str)) === str; // Kiểm tra nếu chuỗi là Base64
-        } catch (err) {
-          return false;
-        }
+          try {
+              return btoa(atob(str)) === str; // Kiểm tra nếu chuỗi là Base64
+          } catch (err) {
+              return false;
+          }
       };
-  
+
       const decodeHex = (hex: string) => {
-        const hexStr = hex.toString();
-        let str = '';
-        for (let i = 0; i < hexStr.length; i += 2) {
-          str += String.fromCharCode(parseInt(hexStr.substr(i, 2), 16));
-        }
-        return str;
+          const hexStr = hex.toString();
+          let str = '';
+          for (let i = 0; i < hexStr.length; i += 2) {
+              str += String.fromCharCode(parseInt(hexStr.substr(i, 2), 16));
+          }
+          return str;
       };
-  
+
       let processedPayload = decodedPayload;
-  
+
       if (isBase64(decodedPayload)) {
-        // Giải mã Base64 nếu payload là Base64
-        processedPayload = atob(decodedPayload);
+          // Giải mã Base64 nếu payload là Base64
+          processedPayload = atob(decodedPayload);
       } else if (/^[0-9a-fA-F]+$/.test(decodedPayload)) {
-        // Giải mã Hex nếu payload là chuỗi Hex
-        processedPayload = decodeHex(decodedPayload);
+          // Giải mã Hex nếu payload là chuỗi Hex
+          processedPayload = decodeHex(decodedPayload);
       }
-  
-      // Nếu processedPayload là null, không tiếp tục xử lý
+
       if (!processedPayload) {
-        return;
+          return; // Dừng lại nếu không có payload
       }
-  
-      // Regex để nhận diện email với các domain hợp lệ như yahoo, gmail, edu, gov, v.v.
-      const emailRegex = /[a-zA-Z0-9._%+-]+@(gmail|yahoo|edu|gov|hotmail)\.[a-zA-Z]{2,}/g;
+
+      // Biểu thức chính quy để nhận diện dữ liệu nhạy cảm giống như trong file Python
+
+      // Regex cho email
+      const emailRegex = /(?:\t| |^|<|,|:)([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+      // Regex bước đầu để nhận diện thẻ tín dụng
+      const firstStepCreditCardRegex = /(?:\s|^)(?:\d[ -]*?){13,16}(?:\s|$)/g;
+      // Regex bước hai để xác minh thẻ tín dụng
+      const secondStepCreditCardRegex = /^(3[47][0-9]{13})|((?:6541|6556)[0-9]{12})|(389[0-9]{11})|(3(?:0[0-5]|[68][0-9])[0-9]{11})|(65[4-9][0-9]{13}|64[4-9][0-9]{13}|6011[0-9]{12}|(?:622(?:12[6-9]|1[3-9][0-9]|[2-8][0-9][0-9]|9[01][0-9]|92[0-5])[0-9]{10}))|(63[7-9][0-9]{13})|((?:2131|1800|35\d{3})\d{11})|(9[0-9]{15})|((?:6304|6706|6709|6771)[0-9]{12,15})|((?:5018|5020|5038|6304|6759|6761|6763)[0-9]{8,15})|((?:5[1-5][0-9]{2}|222[1-9]|22[3-9][0-9]|2[3-6][0-9]{2}|27[01][0-9]|2720)[0-9]{12})|((6334|6767)[0-9]{12,14,15})|((?:4903|4905|4911|4936|6333|6759)[0-9]{12,14,15}|564182[0-9]{10,12,13}|633110[0-9]{10,12,13})|(62[0-9]{14,17})|(4[0-9]{12}(?:[0-9]{3})?)|(9[0-9]{15})$/;
+      // Regex cho tên người dùng
+      const usernameRegex = /(?:(?:username|user|login|usr|name|uid|uname|u_name|user_id|user_name|account|acct|member|membername|useraccount|user_login|login_name|userID|identifier|user_key|client_id|clientid|accountname|profile_name|usercode|customer_id|subscriber|admin_user|login_id|employee_id|staff_id|emp_number|client_number|cust_number|account_number|user_token|session_user|admin_name|operator_id|contact_id|contact_name|client_code|member_id|partner_id|partner_code|agent_id|agent_code|merchant_id|merchant_code|shop_id|shop_code|user_handle|screen_name|login_user|site_user|system_user|user_alias|operator_name|account_id|user_email|email_address|user_contact|user_reference|account_reference|ref_id|user_phone|mobile_number|user_mobile|user_nickname|nickname|user_initials|initials|account_holder|account_user|service_user|access_user|resource_user|database_user|db_user|schema_user|table_user|column_user|row_user|api_user|web_user|service_account|bot_user|bot_account|process_user|task_user|container_user|vm_user|virtual_user|cloud_user|cloud_account)['"]?\s*[:=]\s*['"]?([\w.-@]+)['"]?)/gi;
+      // Regex cho mật khẩu
+      const passwordRegex = /(?:(?:password|pass|pwd|pw|passwd|pword|secret|secretword|secret_code|auth|authorization|passcode|passphrase|access_key|access_code|pin|pin_code|security_key|private_key|token|secure_pass|secure_password|api_key|keyphrase|crypt_key|encryption_key|secretkey|sec_key|credential|auth_token|security_token|otp|one_time_password|recovery_key|recovery_code|backup_code|decryption_key|session_key|login_password|admin_pass|root_pass|sudo_pass|master_key|master_password|system_password|device_key|machine_key|encryption_pass|lock_code|unlock_code|pin_number|signing_key|signature_key|crypto_key|crypto_pass|cipher_key|cipher_pass|vault_key|vault_pass|recovery_pass|backup_pass|keystore_password|keystore_pass|token_password|ssh_key|ssh_pass|ftp_pass|http_pass|https_pass|service_pass|process_pass|task_pass|container_pass|vm_pass|cloud_pass|virtual_pass|network_pass|router_pass|switch_pass|firewall_pass|db_pass|database_pass|db_password|db_key|database_key|data_pass|field_pass|row_pass|column_pass|schema_pass|table_pass)['"]?\s*[:=]\s*['"]?([\w.-@!#%^&*]+)['"]?)/gi;
+      // Regex cho domain
+      const domainRegex = /[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+      // Regex cho tài liệu dạng Excel
       const documentRegex = /\b\w+_\d{4}\.xlsx\b/g;
-      const idRegex = /-\.(\d+)-/g; // Nhận diện ID nằm giữa dấu "-." và "-"
-      const contentRegex = /-#[A-Za-z0-9/.*]+/g; // Nhận diện content với tiền tố "-#"
-  
-      // Trích xuất các phần tử bằng regex
-      let emails = Array.from(new Set(processedPayload.match(emailRegex) || [])); // Loại bỏ email trùng lặp
-      const documents = Array.from(new Set(processedPayload.match(documentRegex) || [])); // Tài liệu
-      const ids = Array.from(new Set((processedPayload.match(idRegex) || []).map(match => match.slice(1)))); // Trích xuất ID giữa "-." và "-"
-      // const contents = Array.from(new Set(processedPayload.match(contentRegex) || [])); // Gom content
-      const contents = Array.from(new Set(processedPayload.match(contentRegex) || [])).filter(content => content.length >= 10 && !/\.{3,}/.test(content)); 
-      const userRegex = /email-([a-zA-Z0-9.-]+)-([a-zA-Z0-9.-]+)\.([a-zA-Z]{2,})/;
-      const userMatch = processedPayload.match(userRegex); // Trích xuất username và domain
-      // Danh sách các TLD hợp lệ
+
+          // Danh sách các TLD hợp lệ
       const allowedTLDs = [
         'com', 'net', 'info', 'io', 'org', 'gov', 'edu', 'vn', 'biz', 'mil', 
         'us', 'uk', 'xyz', 'tech', 'store', 'online', 'site',
@@ -632,27 +768,67 @@ const Dashboard = () => {
         return allowedTLDs.includes(tld) && parts.every((part: string) => part.length >= 2);
       });
 
-      let username = '';
-      let domain = '';
-      if (userMatch && userMatch.length >= 4) {
-        username = userMatch[1]; // Trích xuất username (ví dụ: 19.kennedy)
-        domain = `${userMatch[2]}.${userMatch[3]}`; // Trích xuất domain (ví dụ: mendoza.info)
-      }
-  
-      // Đảm bảo các dữ liệu được chia tách rõ ràng
-      const extracted = [
-        ...emails.map((email) => ({ type: 'Email', value: email })),
-        ...documents.map((doc) => ({ type: 'Document', value: doc })),
-        ...ids.map((id) => ({ type: 'ID', value: id })), // ID giữ riêng
-        ...contents.map((content) => ({ type: 'Content', value: content })), // Content giữ riêng
-        ...domains.map(domain => ({ type: 'Domain', value: domain })), // Thêm các domain hợp lệ
-        ...(username ? [{ type: 'Username', value: username }] : []), // Thêm username nếu có
-      ];
-  
-      // Cập nhật lại state với dữ liệu mới đã được lọc
-      setExtractedData(extracted); // Lưu dữ liệu trích xuất vào state
+      // Trích xuất các giá trị từ payload
+      const emails = Array.from(new Set(processedPayload.match(emailRegex) || []));
+      const creditCards = Array.from(new Set(processedPayload.match(firstStepCreditCardRegex) || []));
+      const usernames = Array.from(new Set(processedPayload.match(usernameRegex) || []));
+      const passwords = Array.from(new Set(processedPayload.match(passwordRegex) || []));
+      // const domains = Array.from(new Set(processedPayload.match(domainRegex) || []));
+      const documents = Array.from(new Set(processedPayload.match(documentRegex) || []));
+
+      const cleanedCreditCards = creditCards.map(card => card.replace(/[\s-]/g, '')).filter(card => secondStepCreditCardRegex.test(card));
+
+      // Cập nhật dữ liệu đã trích xuất vào state, giữ nguyên giá trị cũ nếu không có thay đổi
+      setExtractedData(prev => {
+        let updatedData = [...prev];
+
+        // Kiểm tra và cập nhật email
+        emails.forEach(email => {
+          if (!updatedData.some(data => data.type === 'Email' && data.value === email)) {
+              updatedData.push({ type: 'Email', value: email });
+          }
+        });
+
+        // Kiểm tra và cập nhật thẻ tín dụng
+        cleanedCreditCards.forEach(card => {
+          if (!updatedData.some(data => data.type === 'CreditCard' && data.value === card)) {
+              updatedData.push({ type: 'CreditCard', value: card });
+          }
+        });
+
+        // Kiểm tra và cập nhật tên người dùng
+        usernames.forEach(username => {
+          if (!updatedData.some(data => data.type === 'Username' && data.value === username)) {
+              updatedData.push({ type: 'Username', value: username });
+          }
+        });
+
+        // Kiểm tra và cập nhật mật khẩu
+        passwords.forEach(password => {
+          if (!updatedData.some(data => data.type === 'Password' && data.value === password)) {
+              updatedData.push({ type: 'Password', value: password });
+          }
+        });
+
+        // Kiểm tra và cập nhật domain
+        domains.forEach(domain => {
+          if (!updatedData.some(data => data.type === 'Domain' && data.value === domain)) {
+              updatedData.push({ type: 'Domain', value: domain });
+          }
+        });
+
+        // Kiểm tra và cập nhật document
+        documents.forEach(document => {
+          if (!updatedData.some(data => data.type === 'Document' && data.value === document)) {
+              updatedData.push({ type: 'Document', value: document });
+          }
+        });
+
+        return updatedData;
+      });
     }
   }, [extractedData, modalContent]);
+
   
   const handleOk = () => {
     setIsModalVisiblePayload(false); // Đóng modal khi nhấn OK
@@ -733,7 +909,7 @@ const Dashboard = () => {
   const actionColumn = {
     title: 'Action',
     key: 'action',
-    width: 125, // Tăng kích thước cột nếu cần để chứa cả 2 nút
+    width: 155, // Tăng kích thước cột nếu cần để chứa cả 2 nút
     render: (text: any, record: TrafficRecord) => (
       <Space size="middle">
         {/* Nút Tìm kiếm Log */}
@@ -763,11 +939,11 @@ const Dashboard = () => {
             </Col>
             {viewType === "Map" && (
               <Col span={16}>
-                <Tabs activeKey={activeTabKey} onChange={handleTabChange} centered>
-                  <TabPane tab="Overview" key="2" />
-                  <TabPane tab="Artifacts" key="3" />
-                  <TabPane tab="Communications" key="4" />
-                  <TabPane tab="Network" key="1" />
+                <Tabs style={{fontSize:"24px"}} activeKey={activeTabKey} onChange={handleTabChange} centered>
+                  <TabPane tab="Overview" key="2" style={{fontSize:"24px"}}/>
+                  <TabPane tab="Artifacts" key="3" style={{fontSize:"24px"}}/>
+                  <TabPane tab="Communications" key="4" style={{fontSize:"24px"}}/>
+                  <TabPane tab="Network" key="1" style={{fontSize:"24px"}}/>
                 </Tabs>
               </Col>
             )}
@@ -796,7 +972,7 @@ const Dashboard = () => {
                    </Row>
                   <Row >
                     <Col span={24}><div >
-                    <h1>Network Map</h1>
+                    <h1>IP Address Map</h1>
                   </div>
                  </Col>
                   </Row>
@@ -807,39 +983,36 @@ const Dashboard = () => {
                 <div>
                   <Row gutter={[24, 24]} className="event-summary" style={{ marginBottom: "20px" }}>
                     <Col span={8}>
-                      <Card style={{ background: "#1c1c1e", color: "#fff" }}>
-                        <h3>Total Event</h3>
-                        <p>
-                          <Tooltip title="Total Event" placement="right">
-                            {totalE} events <i className="fas fa-info-circle"></i>
-                          </Tooltip>
+                      <Card style={{ background: "#1c1c1e", color: "#fff", fontSize:"20px" }}>
+                        <h3 style={{fontSize:"30px", marginTop:"-5px"}}>Total Event</h3>
+                        <p style={{fontSize:"24px", marginTop:"-5px", marginBottom:"-5px"}}>
+                        {totalE} events 
                         </p>
                       </Card>
                     </Col>
                     <Col span={8}>
-                      <Card style={{ background: "#1c1c1e", color: "#fff" }}>
-                        <h3>Total Event Alert</h3>
-                        <p>
-                          <Tooltip title="Total Event" placement="right">
-                            {Data22SumAlert} events <i className="fas fa-info-circle"></i>
-                          </Tooltip>
+                      <Card style={{ background: "#1c1c1e", color: "#fff", fontSize:"20px" }}>
+                        <h3 style={{fontSize:"30px", marginTop:"-5px"}}>Total Event Alert</h3>
+                        <p style={{fontSize:"24px", marginTop:"-5px", marginBottom:"-5px"}}>
+                          {Data22SumAlert} events
                         </p>
                       </Card>
                     </Col>
                     <Col span={7}>
-                      <Card style={{ background: "#1c1c1e", color: "#fff" }}>
-                        <h3>Total IP Alert</h3>
-                        <p>
-                          <Tooltip title="Total Event" placement="right">
-                            {Data22SumIP} IPs <i className="fas fa-info-circle"></i>
+                      <Card style={{ background: "#1c1c1e", color: "#fff", fontSize:"20px" }}>
+                        <h3 style={{fontSize:"30px", marginTop:"-5px"}}>Total IP Alert</h3>
+                        <p style={{fontSize:"24px", marginTop:"-5px", marginBottom:"-5px"}}>{Data22SumIP} IPs </p>
+                        {/* <p>
+                          <Tooltip title="Total Event" placement="right" style={{fontSize:"20px"}}>
+                            <i className="fas fa-info-circle"></i>
                           </Tooltip>
-                        </p>
+                        </p> */}
                       </Card>
                     </Col>
                   </Row>
                   <Row gutter={[24, 24]} className="chart-row">
                     <Col span={23}>
-                      <h2>Event for Time</h2>
+                      <h2>Event Count Over Time</h2>
                       <ResponsiveContainer width="100%" height={300}>
                         <LineChart data={lineChartDatam5}>
                           <CartesianGrid strokeDasharray="3 3" />
@@ -905,7 +1078,7 @@ const Dashboard = () => {
                   </Modal>
                   <Row gutter={[24, 24]} className="chart-row">
                     <Col span={12}>
-                      <h2>Bytes for Time</h2>
+                      <h2>Total Packet Length Over Time</h2>
                       <ResponsiveContainer width="100%" height={300}>
                         <LineChart data={lineChartDatam6}>
                           <CartesianGrid strokeDasharray="3 3" />
@@ -918,7 +1091,7 @@ const Dashboard = () => {
                       </ResponsiveContainer>
                     </Col>
                     <Col span={11}>
-                      <h2>Durations for Time</h2>
+                      <h2>Durations Over Time</h2>
                       <ResponsiveContainer width="100%" height={300}>
                         <LineChart data={lineChartDatam7}>
                           <CartesianGrid strokeDasharray="3 3" />
@@ -1029,39 +1202,41 @@ const Dashboard = () => {
                   <Row gutter={[24, 24]} className="event-summary" style={{ marginBottom: "20px" }}>
                     <Col span={12}>
                       <Card style={{ background: "#1c1c1e", color: "#fff" }}>
-                        <h3>Overview</h3>
-                        <p>
+                        <p style={{fontSize:"24px", marginTop:"2px", marginBottom:"2px"}}>
                           <Tooltip title="Max packet size" placement="right">
-                          Max packet size: {Datam8Max} Bytes <i className="fas fa-info-circle"></i>
+                          Maximum packet size: {Datam8Max} Bytes <i className="fas fa-info-circle"></i>
                           </Tooltip>
                         </p>
-                        <p>
+                        <p style={{fontSize:"24px", marginTop:"2px", marginBottom:"2px"}}>
                           <Tooltip title="Min packet size" placement="right">
-                          Min packet size: {Datam8Min} Bytes <i className="fas fa-info-circle"></i>
+                          Minimum packet size: {Datam8Min} Bytes <i className="fas fa-info-circle"></i>
                           </Tooltip>
                         </p>
-                        <p>
+                        <p style={{fontSize:"24px", marginTop:"2px", marginBottom:"2px"}}>
                           <Tooltip title="Mean of size" placement="right">
-                          Mean of size: {Datam8Mean} Bytes <i className="fas fa-info-circle"></i>
-                          </Tooltip>
-                        </p>
-                        <p>
-                          <Tooltip title="Source IP number" placement="right">
-                            Source IP number: {Datam8Src} IP <i className="fas fa-info-circle"></i>
-                          </Tooltip>
-                        </p>
-                        <p>
-                          <Tooltip title="Destination IP number" placement="right">
-                            Destination IP number: {Datam8Dst} IP <i className="fas fa-info-circle"></i>
-                          </Tooltip>
-                        </p>
-                        <p>
-                          <Tooltip title="IP number" placement="right">
-                            IP number: {Datam8SumIP} <i className="fas fa-info-circle"></i>
+                          Average packet size: {Datam8Mean} Bytes <i className="fas fa-info-circle"></i>
                           </Tooltip>
                         </p>
                       </Card>
                     </Col>
+                    <Col span={12}>
+                    <Card style={{ background: "#1c1c1e", color: "#fff" }}>
+                        <p style={{fontSize:"24px", marginTop:"2px", marginBottom:"2px"}}>
+                          <Tooltip title="Source IP number" placement="right">
+                            Source IP number: {Datam8Src} IP <i className="fas fa-info-circle"></i>
+                          </Tooltip>
+                        </p>
+                        <p style={{fontSize:"24px", marginTop:"2px", marginBottom:"2px"}}>
+                          <Tooltip title="Destination IP number" placement="right">
+                            Destination IP number: {Datam8Dst} IP <i className="fas fa-info-circle"></i>
+                          </Tooltip>
+                        </p>
+                        <p style={{fontSize:"24px", marginTop:"2px", marginBottom:"2px"}}>
+                          <Tooltip title="IP number" placement="right">
+                            IP number: {Datam8SumIP} <i className="fas fa-info-circle"></i>
+                          </Tooltip>
+                        </p>
+                      </Card></Col>
                   </Row>
                   <Row gutter={[20, 20]} className="chart-row">
                     <Col span={12}>
@@ -1169,23 +1344,22 @@ const Dashboard = () => {
                   <Row gutter={[24, 24]} className="event-summary" style={{ marginBottom: "20px" }}>
                     <Col span={12}>
                       <Card style={{ background: "#1c1c1e", color: "#fff" }}>
-                        <h3>Overview</h3>
-                        <p>
+                        <p style={{fontSize:"24px", marginTop:"2px", marginBottom:"2px"}}>
                           <Tooltip title="Range of size" placement="right">
                             Number Src Port: {Datam813UniSrc} Ports <i className="fas fa-info-circle"></i>
                           </Tooltip>
                         </p>
-                        <p>
+                        <p style={{fontSize:"24px", marginTop:"2px", marginBottom:"2px"}}>
                           <Tooltip title="Source IP number" placement="right">
                           Number Dst Port: {Datam813UniDst} Ports <i className="fas fa-info-circle"></i>
                           </Tooltip>
                         </p>
-                        <p>
+                        <p style={{fontSize:"24px", marginTop:"2px", marginBottom:"2px"}}>
                           <Tooltip title="Destination IP number" placement="right">
                             Number of Protocol: {Datam813UniPro} <i className="fas fa-info-circle"></i>
                           </Tooltip>
                         </p>
-                        <p>
+                        <p style={{fontSize:"24px", marginTop:"2px", marginBottom:"2px"}}>
                           <Tooltip title="IP number" placement="right">
                           Number of App Protocol: {Datam813AppPro}  <i className="fas fa-info-circle"></i>
                           </Tooltip>
@@ -1194,18 +1368,17 @@ const Dashboard = () => {
                     </Col>
                     <Col span={12}>
                       <Card style={{ background: "#1c1c1e", color: "#fff" }}>
-                        <h3>Overview</h3>
-                        <p>
+                        <p style={{fontSize:"24px", marginTop:"2px", marginBottom:"2px"}}>
                           <Tooltip title="Range of size" placement="right">
                             Max Duration: {Data13Max}s <i className="fas fa-info-circle"></i>
                           </Tooltip>
                         </p>
-                        <p>
+                        <p style={{fontSize:"24px", marginTop:"2px", marginBottom:"2px"}}>
                           <Tooltip title="Source IP number" placement="right">
                             Min Duration: {Datam13Min}s <i className="fas fa-info-circle"></i>
                           </Tooltip>
                         </p>
-                        <p>
+                        <p style={{fontSize:"24px", marginTop:"2px", marginBottom:"2px"}}>
                           <Tooltip title="Destination IP number" placement="right">
                             Mean Duration: {Datam13Mean}s <i className="fas fa-info-circle"></i>
                           </Tooltip>
@@ -1215,14 +1388,14 @@ const Dashboard = () => {
                   </Row>
                   <Row gutter={[24, 24]} className="chart-row">
                     <Col span={12}>
-                    <h2>The Protocol</h2>
+                    <h2>Protocol Distribution</h2>
                       <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
                           <Pie
                             data={pieChartData14}
                             cx="50%"
                             cy="50%"
-                            outerRadius={80}
+                            outerRadius={120}
                             fill="#8884d8"
                             dataKey="value"
                             label
@@ -1236,7 +1409,7 @@ const Dashboard = () => {
                       </ResponsiveContainer>
                     </Col>
                     <Col span={12}>
-                    <h2>Top The Application Protocol</h2>
+                    <h2>Top Application Protocol</h2>
                     <div style={{ marginBottom: '10px' }}>
                       <Button type={chartBtn.barChart15 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm15Change(barChartData15,3)}>Top 3</Button>
                       <Button type={chartBtn.barChart15 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm15Change(barChartData15,5)} style={{ marginLeft: 8 }}>Top 5</Button>
@@ -1262,7 +1435,7 @@ const Dashboard = () => {
                   </Row>
                   <Row gutter={[20, 20]} className="chart-row">
                     <Col span={12}>
-                    <h2>Top source port.</h2>
+                    <h2>Top Source Port Distribution</h2>
                     <div style={{ marginBottom: '10px' }}>
                       <Button type={chartBtn.barChart16 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm16Change(barChartData16,3)}>Top 3</Button>
                       <Button type={chartBtn.barChart16 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm16Change(barChartData16,5)} style={{ marginLeft: 8 }}>Top 5</Button>
@@ -1286,7 +1459,7 @@ const Dashboard = () => {
                       )}
                     </Col>
                     <Col span={12}>
-                    <h2>Top destination port.</h2>
+                    <h2>Top Destination Port Distribution</h2>
                     <div style={{ marginBottom: '10px' }}>
                       <Button type={chartBtn.barChart17 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm17Change(barChartData17,3)}>Top 3</Button>
                       <Button type={chartBtn.barChart17 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm17Change(barChartData17,5)} style={{ marginLeft: 8 }}>Top 5</Button>
@@ -1312,7 +1485,7 @@ const Dashboard = () => {
                   </Row>
                   <Row gutter={[24, 24]} className="chart-row">
                     <Col span={23}>
-                      <h2>Total Source To Destination Bytes Sent</h2>
+                      <h2>Total Bytes Sent from Source to Destination</h2>
                       <ResponsiveContainer width="100%" height={300}>
                         <LineChart data={lineChartData18}>
                           <CartesianGrid strokeDasharray="3 3" />
@@ -1327,7 +1500,7 @@ const Dashboard = () => {
                   </Row>
                   <Row gutter={[24, 24]} className="chart-row">
                     <Col span={23}>
-                      <h2>Total Destination To Source Bytes Sent</h2>
+                      <h2>Total Bytes Sent from Destination to Source</h2>
                       <ResponsiveContainer width="100%" height={300}>
                         <LineChart data={lineChartData19}>
                           <CartesianGrid strokeDasharray="3 3" />
@@ -1412,7 +1585,7 @@ const Dashboard = () => {
                   prevIcon: <Button>«</Button>,
                   nextIcon: <Button>»</Button>,
                 }}
-                scroll={{x:1000,y:300}}
+                scroll={{x:500,y:500}}
                 components={{
                   header: {
                     cell: ResizableTitle,

@@ -504,6 +504,7 @@ const Dashboard = () => {
                     key="1" 
                     disabled={log_type !== ('dns')} 
                     active={log_type === ('dns')}
+                    style={{fontSize:"16px"}}
                   />
                   <TabPane 
                     tab="Audit Log" 
@@ -533,16 +534,16 @@ const Dashboard = () => {
                   <Row gutter={[24, 24]} className="chart-row">
                   <Col span={12}>
                       <Card style={{ background: "#1c1c1e", color: "#fff", height:'150px',marginBottom:'20px', marginTop:'20px' }}>
-                        <h3>Total Event </h3>
-                        <p>
+                        <h3 style={{fontSize:"30px", marginTop:"-5px", marginBottom:"5px"}}>Total Event </h3>
+                        <p style={{fontSize:"24px", marginTop:"-2px", marginBottom:"-5px"}}>
                           <Tooltip title="Total Event" placement="right">
                             {Data13[0]} events <i className="fas fa-info-circle"></i>
                           </Tooltip>
                         </p>
                       </Card>
                       <Card style={{ background: "#1c1c1e", color: "#fff", height: '150px' }}>
-                        <h3>Alert Event</h3>
-                        <p>
+                        <h3 style={{fontSize:"30px", marginTop:"-5px", marginBottom:"5px"}}>Alert Event</h3>
+                        <p style={{fontSize:"24px", marginTop:"-2px", marginBottom:"-5px"}}>
                           <Tooltip title="Total Event" placement="right">
                             {Data13[1]} events <i className="fas fa-info-circle"></i>
                           </Tooltip>
@@ -550,12 +551,12 @@ const Dashboard = () => {
                       </Card>
                     </Col>
                     <Col span={12}>
-                    <h2>DNS Event</h2>
+                    <h2>Event Template Table</h2>
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', marginTop: '20px' }}>
                     <thead>
                       <tr>
                         <th style={{ border: '1px solid black', padding: '8px' }}>Name</th>
-                        <th style={{ border: '1px solid black', padding: '8px' }}>UV</th>
+                        <th style={{ border: '1px solid black', padding: '8px' }}>Count</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -571,7 +572,7 @@ const Dashboard = () => {
                     </Row>
                     <Row gutter={[40, 40]} className="chart-row">
                     <Col span={24}>
-                      <h2>Total Number of DNS Events per Day/Hour</h2>
+                      <h2>Event Count Over Time</h2>
                       <ResponsiveContainer width="100%" height={300}>
                       <LineChart data={lineChartDatam3}>
                         <CartesianGrid strokeDasharray="3 3" />
@@ -639,7 +640,7 @@ const Dashboard = () => {
                     </Modal>
                   <Row gutter={[20, 20]} className="chart-row">
                     <Col span={12}>  
-                    <h2>Top Source IPs by Number of DNS Events</h2>  
+                    <h2>Top Source IP Distribution</h2>  
                      {/* Nhóm nút Top 3, Top 5, Top 10 */}
                     <div style={{ marginBottom: '10px' }}>
                       <Button type={chartBtn.barChart4 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm4Change(barChartDatam4,3)}>Top 3</Button>
@@ -691,8 +692,44 @@ const Dashboard = () => {
               {activeTabKey === "2" && (
                 <div>
                 <Row gutter={[24, 24]} className="chart-row">
-                  <h2>Event Template</h2>
-                    <ResponsiveContainer width="97%" height={300}>
+                <Col span={12}>
+                      <Card style={{ background: "#1c1c1e", color: "#fff", height:'180px',marginBottom:'20px', marginTop:'30px' }}>
+                        <h3 style={{fontSize:"30px", marginTop:"0px"}}>Total Event </h3>
+                        <p style={{fontSize:"24px", marginBottom:"-5px"}}>
+                          <Tooltip title="Total Event" placement="right">
+                            {Data13[0]} events <i className="fas fa-info-circle"></i>
+                          </Tooltip>
+                        </p>
+                      </Card>
+                      <Card style={{ background: "#1c1c1e", color: "#fff", height: '180px' }}>
+                        <h3 style={{fontSize:"30px", marginTop:"0px"}}>Alert Event</h3>
+                        <p style={{fontSize:"24px", marginBottom:"-5px"}}>
+                          <Tooltip title="Total Event" placement="right">
+                            {Data13[1]} events <i className="fas fa-info-circle"></i>
+                          </Tooltip>
+                        </p>
+                      </Card>
+                    </Col>
+                    <Col span={12}>
+                    <h2>Event Template</h2>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', marginTop: '20px' }}>
+                    <thead>
+                      <tr>
+                        <th style={{ border: '1px solid black', padding: '8px' }}>Name</th>
+                        <th style={{ border: '1px solid black', padding: '8px' }}>Count</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {barChartDatam2?.map((item, index) => (
+                        <tr key={index}>
+                          <td style={{ border: '1px solid black', padding: '8px' }}>{item['EventTemplate']}</td>
+                          <td style={{ border: '1px solid black', padding: '8px' }}>{item['Occurrences']}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table></Col>
+                  
+                    {/* <ResponsiveContainer width="97%" height={300}>
                       <BarChart data={barChartDatam2}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="EventTemplate" />
@@ -705,11 +742,11 @@ const Dashboard = () => {
                             ))}
                           </Bar>
                       </BarChart>
-                    </ResponsiveContainer>
+                    </ResponsiveContainer> */}
                   </Row>
                   <Row gutter={[40, 40]} className="chart-row">
                   <Col span={23}>
-                    <h2>Event Per Day</h2>
+                    <h2>Event Count Over Time</h2>
                     <ResponsiveContainer width="100%" height={300}>
                       <LineChart data={lineChartDatam3}>
                         <CartesianGrid strokeDasharray="3 3" />
@@ -774,7 +811,7 @@ const Dashboard = () => {
                     </Modal>
                 <Row gutter={[20, 20]} className="chart-row">
                   <Col span={12}>  
-                  <h2>Event type</h2>     
+                  <h2>Event Type Distribution</h2>     
                   <div style={{ marginBottom: '10px' }}>
                       <Button type={chartBtn.barChart4 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm4Change(barChartDatam4,3)}>Top 3</Button>
                       <Button type={chartBtn.barChart4 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm4Change(barChartDatam4,5)} style={{ marginLeft: 8 }}>Top 5</Button>
@@ -798,7 +835,7 @@ const Dashboard = () => {
                       )}           
                   </Col>
                   <Col span={12}>
-                  <h2>Account activity</h2>
+                  <h2>Account Activity Distribution</h2>
                   <div style={{ marginBottom: '10px' }}>
                       <Button type={chartBtn.barChart5 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm5Change(barChartDatam5,3)}>Top 3</Button>
                       <Button type={chartBtn.barChart5 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm5Change(barChartDatam5,5)} style={{ marginLeft: 8 }}>Top 5</Button>
@@ -822,7 +859,7 @@ const Dashboard = () => {
                 </Row>
                 <Row gutter={[20, 20]} className="chart-row">
                   <Col span={12}>  
-                  <h2>PID</h2>   
+                  <h2>Distribution of Process ID Activity</h2>   
                   <div style={{ marginBottom: '10px' }}>
                       <Button type={chartBtn.barChart6 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm6Change(barChartDatam6Audit,3)}>Top 3</Button>
                       <Button type={chartBtn.barChart6 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm6Change(barChartDatam6Audit,5)} style={{ marginLeft: 8 }}>Top 5</Button>
@@ -846,7 +883,7 @@ const Dashboard = () => {
                       )}                      
                   </Col>
                   <Col span={12}>
-                  <h2>UID</h2>
+                  <h2>Distribution of User ID Activity</h2>
                   <div style={{ marginBottom: '10px' }}>
                       <Button type={chartBtn.barChart7 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm7Change(barChartDatam7Audit,3)}>Top 3</Button>
                       <Button type={chartBtn.barChart7 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm7Change(barChartDatam7Audit,5)} style={{ marginLeft: 8 }}>Top 5</Button>
@@ -870,7 +907,7 @@ const Dashboard = () => {
                 </Row>
                 <Row gutter={[20, 20]} className="chart-row">
                   <Col span={12}>  
-                  <h2>EXE</h2> 
+                  <h2>Distribution of Exe Command</h2> 
                   <div style={{ marginBottom: '10px' }}>
                       <Button type={chartBtn.barChart8 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm8Change(barChartDatam8Audit,3)}>Top 3</Button>
                       <Button type={chartBtn.barChart8 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm8Change(barChartDatam8Audit,5)} style={{ marginLeft: 8 }}>Top 5</Button>
@@ -892,7 +929,7 @@ const Dashboard = () => {
                     </ResponsiveContainer>            
                   </Col>
                   <Col span={12}>
-                  <h2>Successful Event Categories</h2>
+                  <h2>Event Success Rate Distribution</h2>
                     <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
                           <Pie
@@ -918,7 +955,44 @@ const Dashboard = () => {
               {activeTabKey === "3" && (
                 <div>
                   <Row gutter={[24, 24]} className="chart-row">
-                  <h2>Event Template</h2>
+                  <Col span={12}>
+                      <Card style={{ background: "#1c1c1e", color: "#fff", height:'160px',marginBottom:'20px', marginTop:'30px' }}>
+                        <h3 style={{fontSize:"30px", marginTop:"0px"}}>Total Event </h3>
+                        <p style={{fontSize:"24px", marginTop:"-5px"}}>
+                          <Tooltip title="Total Event" placement="right">
+                            {Data13[0]} events <i className="fas fa-info-circle"></i>
+                          </Tooltip>
+                        </p>
+                      </Card>
+                      <Card style={{ background: "#1c1c1e", color: "#fff", height: '160px' }}>
+                        <h3 style={{fontSize:"30px", marginTop:"0px"}}>Alert Event</h3>
+                        <p style={{fontSize:"24px", marginTop:"-5px",marginBottom:"5px"}}>
+                          <Tooltip title="Total Event" placement="right">
+                            {Data13[1]} events <i className="fas fa-info-circle"></i>
+                          </Tooltip>
+                        </p>
+                      </Card>
+                    </Col>
+                    <Col span={12}>
+                    <h2>Event Template Table</h2>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', marginTop: '20px' }}>
+                    <thead>
+                      <tr>
+                        <th style={{ border: '1px solid black', padding: '8px' }}>Name</th>
+                        <th style={{ border: '1px solid black', padding: '8px' }}>Count</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {barChartDatam2?.map((item, index) => (
+                        <tr key={index}>
+                          <td style={{ border: '1px solid black', padding: '8px' }}>{item['EventTemplate']}</td>
+                          <td style={{ border: '1px solid black', padding: '8px' }}>{item['Occurrences']}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table></Col>
+                  
+                  {/* <h2>Event Template</h2>
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={barChartDatam2}>
                         <CartesianGrid strokeDasharray="3 3" />
@@ -933,11 +1007,11 @@ const Dashboard = () => {
                             ))}
                           </Bar>
                       </BarChart>
-                    </ResponsiveContainer>
+                    </ResponsiveContainer> */}
                   </Row>
                   <Row gutter={[40, 40]} className="chart-row">
                   <Col span={23}>
-                    <h4>Number Event Per Hours</h4>
+                    <h2>Event Count Over Time</h2>
                     <ResponsiveContainer width="100%" height={300}>
                       <LineChart data={lineChartDatam3}>
                         <CartesianGrid strokeDasharray="3 3" />
@@ -1003,7 +1077,7 @@ const Dashboard = () => {
                     </Modal>
                 <Row gutter={[20, 20]} className="chart-row">
                   <Col span={12}>  
-                  <h2>Top Frequent Values in Client_IP</h2>  
+                  <h2>Top Client IP Distribution</h2>  
                   <div style={{ marginBottom: '10px' }}>
                       <Button type={chartBtn.barChart4 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm4Change(barChartDatam4,3)}>Top 3</Button>
                       <Button type={chartBtn.barChart4 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm4Change(barChartDatam4,5)} style={{ marginLeft: 8 }}>Top 5</Button>
@@ -1026,7 +1100,7 @@ const Dashboard = () => {
                     </ResponsiveContainer>            
                   </Col>
                   <Col span={12}>
-                  <h2>Histogram Of Filtered Data</h2>
+                  <h2>Response Size Distribution</h2>
                   <div style={{ marginBottom: '10px' }}>
                       <Button type={chartBtn.barChart5 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm5Change(barChartDatam5,3)}>Top 3</Button>
                       <Button type={chartBtn.barChart5 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm5Change(barChartDatam5,5)} style={{ marginLeft: 8 }}>Top 5</Button>
@@ -1070,12 +1144,12 @@ const Dashboard = () => {
                   </ResponsiveContainer>               
                 </Col>
                 <Col span={12}>
-                  <h2>User_Agent</h2>
+                  <h2>User Agent Distribution</h2>
                   <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', marginTop: '20px' }}>
                     <thead>
                       <tr>
                         <th style={{ border: '1px solid black', padding: '8px' }}>Name</th>
-                        <th style={{ border: '1px solid black', padding: '8px' }}>UV</th>
+                        <th style={{ border: '1px solid black', padding: '8px' }}>Count</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1091,7 +1165,7 @@ const Dashboard = () => {
                 </Row>
                 <Row gutter={[20, 20]} className="chart-row">
                   <Col span={8}>  
-                  <h2>Distribution of Status_Code</h2>              
+                  <h2>Distribution of Status Code</h2>              
                   <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
                           <Pie
@@ -1216,7 +1290,7 @@ const Dashboard = () => {
                   prevIcon: <Button>«</Button>,
                   nextIcon: <Button>»</Button>,
                 }}
-                scroll={{x:1000}}
+                scroll={{x:1000,y:500}}
                 components={{
                   header: {
                     cell: ResizableTitle,
