@@ -37,27 +37,46 @@ const COLORS = [
 const Dashboard = () => {
   const { id } = useParams();
   const [viewType, setViewType] = useState("Map");
-  const [activeTabKey, setActiveTabKey] = useState("2");
+  const [activeTabKey, setActiveTabKey] = useState("1");
   // M1
   const [tableDatam1, setTableDatam1] = useState([]);
   // State cho tìm kiếm và trường được chọn của M1
   const [searchText, setSearchText] = useState('');
   const [selectedField, setSelectedField] = useState('');
   //M2 
+  interface ProtocolCounts {
+    SSH: number;
+    HTTP: number;
+    HTTPS: number;
+    DNS: number;
+    TCP: number; 
+}
   interface Netgraph {
     source: string; // hoặc Date, tùy vào định dạng
     target: string; // nếu có thêm id hoặc các thuộc tính khác
     label: string;
     [key: string]: any;
   }
+  interface NetTableRecord {
+    id: number
+    source: string;
+    target: string;
+    nameserver: string;
+    label: string;
+    protocol_counts: ProtocolCounts;
+    payloads_with_timestamps: any;
+    dest_event_counts: Record<string, number>;
+    source_event_counts: Record<string, number>;
+}
   const [netgraph, setNetgraph] = useState<Netgraph[]>([]);
   const nettablecolumns = [
     { title: 'Source', dataIndex: 'source', key: 'src', width: 150 },
     { title: 'Target', dataIndex: 'target', key: 'targ', width: 150 },
-    { title: 'Server', dataIndex: 'nameserver', key: 'srv', width: 150 },
-    { title: 'Label', dataIndex: 'label', key: 'labl', width: 80 },
+    // { title: 'Server', dataIndex: 'nameserver', key: 'srv', width: 150 },
+    { title: 'Label', dataIndex: 'label', key: 'labl', width: 100 },
   ]
   const [nettable, setNettable] = useState([]);
+  const [netInfo, setNetInfo] = useState<NetTableRecord[]>([]);
   //M4
   const [totalE, setTotalEM4] = useState([]);
   // M5
@@ -118,25 +137,91 @@ const Dashboard = () => {
   const [barChartDatam26, setBarChartDatam26] = useState([]);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [columns, setColumns] = useState([
-    // { title: 'Flow ID', dataIndex: 'Flow ID', key: 'flowID', width: 100 },
-    { title: 'Timestamp', dataIndex: 'Timestamp', key: 'timestamp', width: 120 },
-    { title: 'Source IP', dataIndex: 'Source IP', key: 'srcIP', width: 150 },
-    { title: 'Destination IP', dataIndex: 'Destination IP', key: 'dstIP', width: 150 },
-    { title: 'Source Port', dataIndex: 'Source Port', key: 'srcPort', width: 90 },
-    { title: 'Destination Port', dataIndex: 'Destination Port', key: 'dstPort', width: 120 },
-    { title: 'Protocol', dataIndex: 'Protocol', key: 'protocol', width: 100 },
-    { title: 'Application Protocol', dataIndex: 'Application Protocol', key: 'appProtocol', width: 130 },
-    { title: 'Time Delta', dataIndex: 'Time_Delta', key: 'timeDelta', width: 110 },
-    { title: 'Totlen Pkts', dataIndex: 'Totlen Pkts', key: 'totLenPkts', width: 100 },
-    { title: 'Tot Fwd Pkts', dataIndex: 'Tot Fwd Pkts', key: 'totFwdPkts', width: 100 },
-    { title: 'Tot Bwd Pkts', dataIndex: 'Tot Bwd Pkts', key: 'totBwdPkts', width: 100 },
-    { title: 'TotLen Fwd Pkts', dataIndex: 'TotLen Fwd Pkts', key: 'totLenFwdPkts', width: 100 },
-    { title: 'TotLen Bwd Pkts', dataIndex: 'TotLen Bwd Pkts', key: 'totLenBwdPkts', width: 100 },
-    { title: 'Tot Pkts', dataIndex: 'Tot Pkts', key: 'totPkts', width: 60 },
-    { title: 'Label', dataIndex: 'Label', key: 'labl', width: 90 },
-    { title: 'Confidence Score', dataIndex: 'Conference', key: 'conference', width: 110 },
-  ]);
+  // const [columns, setColumns] = useState([
+  //   // { title: 'Flow ID', dataIndex: 'Flow ID', key: 'flowID', width: 100 },
+  //   { title: 'Timestamp', dataIndex: 'Timestamp', key: 'timestamp', width: 120 },
+  //   { title: 'Source IP', dataIndex: 'Source IP', key: 'srcIP', width: 150 },
+  //   { title: 'Destination IP', dataIndex: 'Destination IP', key: 'dstIP', width: 150 },
+  //   { title: 'Source Port', dataIndex: 'Source Port', key: 'srcPort', width: 90 },
+  //   { title: 'Destination Port', dataIndex: 'Destination Port', key: 'dstPort', width: 120 },
+  //   { title: 'Protocol', dataIndex: 'Protocol', key: 'protocol', width: 100 },
+  //   { title: 'Application Protocol', dataIndex: 'Application Protocol', key: 'appProtocol', width: 130 },
+  //   // { title: 'Time Delta', dataIndex: 'Time_Delta', key: 'timeDelta', width: 110 },
+  //   // { title: 'Totlen Pkts', dataIndex: 'Totlen Pkts', key: 'totLenPkts', width: 100 },
+  //   // { title: 'Tot Fwd Pkts', dataIndex: 'Tot Fwd Pkts', key: 'totFwdPkts', width: 100 },
+  //   // { title: 'Tot Bwd Pkts', dataIndex: 'Tot Bwd Pkts', key: 'totBwdPkts', width: 100 },
+  //   // { title: 'TotLen Fwd Pkts', dataIndex: 'TotLen Fwd Pkts', key: 'totLenFwdPkts', width: 100 },
+  //   // { title: 'TotLen Bwd Pkts', dataIndex: 'TotLen Bwd Pkts', key: 'totLenBwdPkts', width: 100 },
+  //   // { title: 'Tot Pkts', dataIndex: 'Tot Pkts', key: 'totPkts', width: 60 },
+  //   { title: 'Label', dataIndex: 'Label', key: 'labl', width: 90 },
+  //   { title: 'Confidence Score', dataIndex: 'Conference', key: 'conference', width: 110 },
+  // ]);
+  const columns = [
+    {
+        title: 'Timestamp',
+        dataIndex: 'Timestamp',
+        key: 'timestamp',
+        width: 120,
+        sorter: (a: any, b: any) => new Date(a['Timestamp']).getTime() - new Date(b['Timestamp']).getTime(),
+    },
+    {
+        title: 'Source IP',
+        dataIndex: 'Source IP',
+        key: 'srcIP',
+        width: 80,
+        sorter: (a: any, b: any) => a['Source IP'].localeCompare(b['Source IP']),
+    },
+    {
+        title: 'Destination IP',
+        dataIndex: 'Destination IP',
+        key: 'dstIP',
+        width: 80,
+        sorter: (a: any, b: any) => a['Destination IP'].localeCompare(b['Destination IP']),
+    },
+    {
+        title: 'Source Port',
+        dataIndex: 'Source Port',
+        key: 'srcPort',
+        width: 90,
+        sorter: (a: any, b: any) => a['Source Port'] - b['Source Port'],
+    },
+    {
+        title: 'Destination Port',
+        dataIndex: 'Destination Port',
+        key: 'dstPort',
+        width: 100,
+        sorter: (a: any, b: any) => a['Destination Port'] - b['Destination Port'],
+    },
+    {
+        title: 'Protocol',
+        dataIndex: 'Protocol',
+        key: 'protocol',
+        width: 70,
+        sorter: (a: any, b: any) => a['Protocol'].localeCompare(b['Protocol']),
+    },
+    {
+        title: 'Application Protocol',
+        dataIndex: 'Application Protocol',
+        key: 'appProtocol',
+        width: 110,
+        sorter: (a: any, b: any) => a['Application Protocol'].localeCompare(b['Application Protocol']),
+    },
+    {
+        title: 'Label',
+        dataIndex: 'Label',
+        key: 'labl',
+        width: 70,
+        sorter: (a: any, b: any) => a['Label'].localeCompare(b['Label']),
+    },
+    {
+        title: 'Confidence Score',
+        dataIndex: 'Conference',
+        key: 'conference',
+        width: 100,
+        sorter: (a: any, b: any) => a['Conference'] - b['Conference'],
+    },
+];
+
    // Hàm xử lý tìm kiếm
   const [selectedValue, setSelectedValue] = useState(null); // State để lưu giá trị đã chọn từ dropdown
   const [uniqueFieldValues, setUniqueFieldValues] = useState([]); // State để lưu các giá trị không trùng lặp của trường đã chọn
@@ -218,9 +303,24 @@ const Dashboard = () => {
       target: edge.target,
       nameserver: edge.nameserver,
       label: edge.label,
+      protocol_counts: edge.protocol_counts,
+      payloads_with_timestamps: edge.payloads_with_timestamps,
+      dest_event_counts: edge.dest_event_counts,
+      source_event_counts: edge.source_event_counts,
+    }));
+    const netInfoData = networkData.nettable.map((Info: any) => ({
+      id: Info.id,
+      source: Info.source,
+      target: Info.target,
+      label: Info.label,
+      protocol_counts: Info.protocol_counts,
+      payloads_with_timestamps: Info.payloads_with_timestamps,
+      dest_event_counts: Info.dest_event_counts,
+      source_event_counts: Info.source_event_counts,
     }));
     setNetgraph(netgraphData);
     setNettable(nettableData);
+    setNetInfo(netInfoData);
     // Barchart: uv
     // Linechart: pv
     setTotalEM4(res['m4']);
@@ -517,147 +617,11 @@ const Dashboard = () => {
   };
   //show Payload
 
-  
-  // const showModalPaylaod = (record: TrafficRecord) => {
-  //   const payload = record.Payload; // Lấy payload từ record
-  
-  //   // Làm sạch dữ liệu trước khi thêm mới
-  //   setExtractedData([]); // Đảm bảo dữ liệu cũ được xóa trước khi thêm mới
-  
-  //   setModalContent(payload); // Hiển thị payload đã giải mã
-  //   setIsModalVisiblePayload(true); // Hiển thị modal
-  // };
-  
-  // // Dùng useEffect để theo dõi khi extractedData được reset thành mảng rỗng, sau đó thực hiện các bước tiếp theo.
-  // useEffect(() => {
-  //   if (extractedData.length === 0 && modalContent !== '') {
-  //     const decodedPayload = modalContent; // Lấy payload đã được giải mã
-  
-  //     if (!decodedPayload) {
-  //       return; // Nếu payload là null hoặc không tồn tại, dừng lại
-  //     }
-  
-  //     // Giải mã nếu payload được mã hóa
-  //     const isBase64 = (str: string) => {
-  //       try {
-  //         return btoa(atob(str)) === str; // Kiểm tra nếu chuỗi là Base64
-  //       } catch (err) {
-  //         return false;
-  //       }
-  //     };
-  
-  //     const decodeHex = (hex: string) => {
-  //       const hexStr = hex.toString();
-  //       let str = '';
-  //       for (let i = 0; i < hexStr.length; i += 2) {
-  //         str += String.fromCharCode(parseInt(hexStr.substr(i, 2), 16));
-  //       }
-  //       return str;
-  //     };
-  
-  //     let processedPayload = decodedPayload;
-  
-  //     if (isBase64(decodedPayload)) {
-  //       // Giải mã Base64 nếu payload là Base64
-  //       processedPayload = atob(decodedPayload);
-  //     } else if (/^[0-9a-fA-F]+$/.test(decodedPayload)) {
-  //       // Giải mã Hex nếu payload là chuỗi Hex
-  //       processedPayload = decodeHex(decodedPayload);
-  //     }
-  
-  //     // Nếu processedPayload là null, không tiếp tục xử lý
-  //     if (!processedPayload) {
-  //       return;
-  //     }
-  
-  //     // Regex để nhận diện email với các domain hợp lệ như yahoo, gmail, edu, gov, v.v.
-  //     const emailRegex = /[a-zA-Z0-9._%+-]+@(gmail|yahoo|edu|gov|hotmail)\.[a-zA-Z]{2,}/g;
-  //     const documentRegex = /\b\w+_\d{4}\.xlsx\b/g;
-  //     const idRegex = /-\.(\d+)-/g; // Nhận diện ID nằm giữa dấu "-." và "-"
-  //     const contentRegex = /-#[A-Za-z0-9/.*]+/g; // Nhận diện content với tiền tố "-#"
-  
-  //     // Trích xuất các phần tử bằng regex
-  //     let emails = Array.from(new Set(processedPayload.match(emailRegex) || [])); // Loại bỏ email trùng lặp
-  //     const documents = Array.from(new Set(processedPayload.match(documentRegex) || [])); // Tài liệu
-  //     const ids = Array.from(new Set((processedPayload.match(idRegex) || []).map(match => match.slice(1)))); // Trích xuất ID giữa "-." và "-"
-  //     const contents = Array.from(new Set(processedPayload.match(contentRegex) || [])).filter(content => content.length >= 10 && !/\.{3,}/.test(content)); 
-  //     const userRegex = /email-([a-zA-Z0-9.-]+)-([a-zA-Z0-9.-]+)\.([a-zA-Z]{2,})/;
-  //     const userMatch = processedPayload.match(userRegex); // Trích xuất username và domain
-  //     // Danh sách các TLD hợp lệ
-  //     const allowedTLDs = [
-  //       'com', 'net', 'info', 'io', 'org', 'gov', 'edu', 'vn', 'biz', 'mil', 
-  //       'us', 'uk', 'xyz', 'tech', 'store', 'online', 'site',
-  //       'me', 'tv', 'ai', 'app',
-  //     ];
-  
-  //     // Hàm để đọc ngược chuỗi domain đến khi gặp dấu hiệu dừng
-  //     const extractDomain = (text: string, tld: string) => {
-  //       const tldIndex = text.lastIndexOf(tld); // Tìm vị trí của TLD
-  //       if (tldIndex === -1) return null;
-  
-  //       let domain = tld; // Domain sẽ chứa ít nhất TLD
-  //       // Đọc ngược về trước để tìm ranh giới domain
-  //       for (let i = tldIndex - 1; i >= 0; i--) {
-  //         const char = text[i];
-  //         if (char === '.' && text[i - 1] === '.') {
-  //           // Dừng lại nếu gặp hai dấu chấm liên tiếp
-  //           break;
-  //         }
-  //         if (char === '#' || char === '-') {
-  //           // Dừng lại nếu gặp ký tự đặc biệt như # hoặc -
-  //           break;
-  //         }
-  //         domain = char + domain; // Thêm ký tự vào domain
-  //       }
-  //       return domain;
-  //     };
-  
-  //     // Tìm tất cả các domain trong payload
-  //     let domains: string[] = [];
-  //     allowedTLDs.forEach(tld => {
-  //       const domain = extractDomain(processedPayload, `.${tld}`);
-  //       if (domain) {
-  //         domains.push(domain);
-  //       }
-  //     });
-  
-  //     // Loại bỏ các domain trùng lặp bằng Set
-  //     domains = [...new Set(domains)];
-  
-  //     // Lọc domain với các TLD hợp lệ và loại bỏ các dấu chấm liên tiếp
-  //     domains = domains.filter((domain: string) => {
-  //       const parts = domain.split('.');
-  //       const tld = parts[parts.length - 1]; // Lấy phần TLD
-  //       return allowedTLDs.includes(tld) && parts.every((part: string) => part.length >= 2);
-  //     });
-
-  //     let username = '';
-  //     let domain = '';
-  //     if (userMatch && userMatch.length >= 4) {
-  //       username = userMatch[1]; // Trích xuất username (ví dụ: 19.kennedy)
-  //       domain = `${userMatch[2]}.${userMatch[3]}`; // Trích xuất domain (ví dụ: mendoza.info)
-  //     }
-  
-  //     // Đảm bảo các dữ liệu được chia tách rõ ràng
-  //     const extracted = [
-  //       ...emails.map((email) => ({ type: 'Email', value: email })),
-  //       ...documents.map((doc) => ({ type: 'Document', value: doc })),
-  //       ...ids.map((id) => ({ type: 'ID', value: id })), // ID giữ riêng
-  //       ...contents.map((content) => ({ type: 'Content', value: content })), // Content giữ riêng
-  //       ...domains.map(domain => ({ type: 'Domain', value: domain })), // Thêm các domain hợp lệ
-  //       ...(username ? [{ type: 'Username', value: username }] : []), // Thêm username nếu có
-  //     ];
-  
-  //     // Cập nhật lại state với dữ liệu mới đã được lọc
-  //     setExtractedData(extracted); // Lưu dữ liệu trích xuất vào state
-  //   }
-  // }, [extractedData, modalContent]);
   const showModalPaylaod = (record: TrafficRecord) => {
     const payload = record.Payload; // Lấy payload từ record
-
     // Làm sạch dữ liệu trước khi thêm mới
     setExtractedData([]); // Đảm bảo dữ liệu cũ được xóa trước khi thêm mới
-
+    setSearchTextHL('');
     setModalContent(payload); // Hiển thị payload đã giải mã
     setIsModalVisiblePayload(true); // Hiển thị modal
 };
@@ -702,9 +666,7 @@ const Dashboard = () => {
       if (!processedPayload) {
           return; // Dừng lại nếu không có payload
       }
-
       // Biểu thức chính quy để nhận diện dữ liệu nhạy cảm giống như trong file Python
-
       // Regex cho email
       const emailRegex = /(?:\t| |^|<|,|:)([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
       // Regex bước đầu để nhận diện thẻ tín dụng
@@ -909,7 +871,7 @@ const Dashboard = () => {
   const actionColumn = {
     title: 'Action',
     key: 'action',
-    width: 155, // Tăng kích thước cột nếu cần để chứa cả 2 nút
+    width: 120, // Tăng kích thước cột nếu cần để chứa cả 2 nút
     render: (text: any, record: TrafficRecord) => (
       <Space size="middle">
         {/* Nút Tìm kiếm Log */}
@@ -921,9 +883,62 @@ const Dashboard = () => {
           Payload
         </Button>
       </Space>
-    ),
+    ),  
   };
+
+  const [searchTextHL, setSearchTextHL] = useState('');
+  const handleSearchHighLight = (e:any) => {
+    setSearchTextHL(e.target.value);
+  };
+
+  // Hàm bôi đỏ các ký tự khớp
+  const highlightText = (text:any, search:any) => {
+    if (!search) {
+      return text;
+    }
+
+    const regex = new RegExp(`(${search})`, 'gi');
+    const parts = text.split(regex);
+    return parts.map((part:any, index:any) =>
+      part.toLowerCase() === search.toLowerCase() ? (
+        <span key={index} style={{ backgroundColor: 'rgb(0, 98, 255)', color: 'white' }}>
+          {part}
+        </span>
+      ) : (
+        part
+      )
+    );
+  };
+
   const columnsWithButton = Array.isArray(columns) ? [...columns, actionColumn] : [actionColumn];
+
+  interface NetTableRecord {
+    id: number
+    source: string;
+    target: string;
+    nameserver: string;
+    label: string;
+    protocol_counts: ProtocolCounts;
+    payloads_with_timestamps: any;
+    dest_event_counts: Record<string, number>;
+    source_event_counts: Record<string, number>;
+}
+  const [isDetailVisible, setIsDetailVisible] = useState(false);
+  const [isSourceInfoVisible, setIsSourceInfoVisible] = useState(false);
+  const [isDestInfoVisible, setIsDestInfoVisible] = useState(false);
+  const [detail,setDetail] = useState<any>()
+  const [detailFlow,setDetailFlow] = useState<any>()
+
+  const showSourceInfo = () => {
+      setIsSourceInfoVisible(true);
+  };
+
+  const showDestInfo = () => {
+      setIsDestInfoVisible(true);
+  };
+
+
+  
   
   return (
     <Spin tip="Loading..." spinning={isLoading} >
@@ -961,12 +976,98 @@ const Dashboard = () => {
                   <h1>Network Table</h1>
                   <Table dataSource={nettable} 
                   columns={nettablecolumns} 
-                  scroll={{y:300}} 
+                  scroll={{y:300,x:300}} 
                   pagination={false} 
+                  onRow={(record) => ({
+                    onClick: () => {
+                      console.log("dcm",record);
+                      setDetail(record)
+                      setIsDetailVisible(true)                                         
+                    }, // Xử lý sự kiện click vào hàng
+                })}
                   style={{ width: '100%', height: '400px', marginLeft:'10px' }}
                   rowClassName={(record:any) => (record.label === 'Anomaly' ? 'anomaly-row' : '')}
                   className="custom-table"
                   />
+                  {/* Modal Chi tiết */}
+                  <Modal
+                      title="Thông tin chi tiết"
+                      visible={isDetailVisible}
+                      onCancel={() => setIsDetailVisible(false)}
+                      footer={null}
+                      width={800}
+                  >                 <h2>IP Nguồn: {detail?.source} ----- IP Đích: {detail?.target}</h2>    
+                          <div>
+                              <p>Sự Kiện HTTPS bất thường: {detail?.protocol_counts?.HTTPS || 0}</p>
+                              <p>Sự Kiện HTTP bất thường: {detail?.protocol_counts?.HTTP || 0}</p>
+                              <p>Sự Kiện cầu SSH bất thường: {detail?.protocol_counts?.SSH || 0}</p>
+                              <p>Sự Kiện DNS bất thường: {detail?.protocol_counts?.DNS || 0}</p>
+                              <h3>Payloads:</h3>
+                              <Table
+                                  dataSource={detail?.payloads_with_timestamps?.map((payload:any, index:number) => ({
+                                      details: payload['content'],  // Nội dung payload
+                                      timestamp: payload['timestamp'],  // Thời gian payload
+                                  }))}
+                                  columns={[
+                                      // { title: 'Loại Payload', dataIndex: 'type', key: 'type' },
+                                      { title: 'Chi tiết Payload', dataIndex: 'details', key: 'details' },
+                                      { title: 'Thời gian', dataIndex: 'timestamp', key: 'timestamp' },
+                                  ]}
+                                  scroll={{x:300,y:300}}
+                                  pagination={false}
+                              /> 
+                          </div>
+                      
+                      <div>
+                          <Button onClick={showSourceInfo}>Tìm kiếm các thông tin liên quan đến source</Button>
+                          <Button onClick={showDestInfo} style={{ marginLeft: '30px' }}>
+                              Tìm kiếm các thông tin liên quan đến dest
+                          </Button>
+                      </div>
+                  </Modal>
+
+            {/* Modal Thông tin IP Nguồn */}
+            <Modal
+                title="Thông tin IP Nguồn"
+                visible={isSourceInfoVisible}
+                onCancel={() => setIsSourceInfoVisible(false)}
+                footer={null}
+            >
+                <p>Thống kê bất thường liên quan đến các IP khác</p>
+                <Table
+                    dataSource={detail?.dest_event_counts?.map((event:any, index:number) => ({
+                      ip: event['IP'],  // Nội dung payload
+                      count: event['Count'],  // Thời gian payload
+                  }))}
+                    columns={[
+                        { title: 'Địa chỉ IP', dataIndex: 'ip', key: 'ip' },
+                        { title: 'Số Lượng Yêu cầu Bất thường', dataIndex: 'count', key: 'count' },
+                    ]}
+                    pagination={false}
+                />
+            </Modal>
+
+            {/* Modal Thông tin IP Đích */}
+            <Modal
+                title="Thông tin IP Đích"
+                visible={isDestInfoVisible}
+                onCancel={() => setIsDestInfoVisible(false)}
+                footer={null}
+            >
+                <p>Thống kê bất thường liên quan đến các IP khác</p>
+                <Table
+                    dataSource={detail?.source_event_counts?.map((event:any, index:number) => ({
+                      ip: event['IP'],  // Nội dung payload
+                      count: event['Count'],  // Thời gian payload
+                  }))}
+                    columns={[
+                        { title: 'Địa chỉ IP', dataIndex: 'ip', key: 'ip' },
+                        { title: 'Số Lượng Yêu cầu Bất thường', dataIndex: 'count', key: 'count' },
+                    ]}
+                    pagination={false}
+                />
+            </Modal>
+
                   </div>
                 </Col>
                    </Row>
@@ -1579,6 +1680,7 @@ const Dashboard = () => {
                   </Button>
                 </Col>
               </Row>
+              <Row gutter={[24, 24]} style={{ marginBottom: '20px' }}>
               <Table
                 bordered
                 dataSource={filteredData.map((item: any) => ({
@@ -1587,29 +1689,64 @@ const Dashboard = () => {
                         ? 'anomaly-row'
                         : item.conference === 0.5
                         ? 'yellow-row'
+                        : item.conference === 0.5
+                        ? 'yellow-row'
                         : '',
                 }))}
                 columns={columnsWithButton}
                 pagination={{
-                  pageSize: 10,
+                  pageSize: 5,
                   showSizeChanger: false,
                   position: ['bottomRight'],
                   prevIcon: <Button>«</Button>,
                   nextIcon: <Button>»</Button>,
-                }}
-                scroll={{x:500,y:500}}
+                }}onRow={(record) => ({
+                  onClick: () => {
+                    console.log("dcm",record);
+                    setDetailFlow(record)                                       
+                  }, // Xử lý sự kiện click vào hàng
+              })}
+                scroll={{x:'auto',y:300}}
                 components={{
                   header: {
                     cell: ResizableTitle,
                   },
                 }}
-                rowClassName={(record) => (record.Label === 'Anomaly'
+                rowClassName={(record) => {return record.Conference >= 0.75
                   ? 'anomaly-row'
+                  : record.Conference > 0.5
+                  ? 'orange-row'
                   : record.Conference === 0.5
                   ? 'yellow-row'
-                  : '')}
+                  : ''}}
                 className="custom-table"
               />
+              </Row>
+              <Row gutter={[24, 24]} style={{ marginBottom: '20px' }}>
+              <Col span={8}>
+              <div>
+                <h3>Flow ID: {detailFlow?.['Flow ID']|| " "}</h3>
+                <h3>Timestamp: {detailFlow?.['Timestamp']}</h3>
+                <h3>Source IP: {detailFlow?.['Source IP']}</h3>
+                <h3>Destination IP: {detailFlow?.['Destination IP']}</h3>
+                <h3>Source Port: {detailFlow?.['Source Port']}</h3>
+                <h3>Destination Port: {detailFlow?.['Destination Port']}</h3>
+                <h3>Protocol: {detailFlow?.['Protocol']}</h3>
+                <h3>Application Protocol: {detailFlow?.['Application Protocol']}</h3>
+                <h3>Time Delta: {detailFlow?.['Time_Delta']}</h3>
+                <h3>Totlen Pkts: {detailFlow?.['Totlen Pkts']}</h3>
+                <h3>Tot Fwd Pkts: {detailFlow?.['Tot Fwd Pkts']}</h3>
+                <h3>Tot Bwd Pkts: {detailFlow?.['Tot Bwd Pkts']}</h3>
+                <h3>TotLen Fwd Pkts: {detailFlow?.['TotLen Fwd Pkts']}</h3>
+                <h3>TotLen Bwd Pkts: {detailFlow?.['TotLen Bwd Pkts']}</h3>
+                <h3>Tot Pkts: {detailFlow?.['Tot Pkts']}</h3> 
+            </div>
+              </Col>
+              <Col span={16}>
+              <h3 style={{width:'100'}}>Payload: {detailFlow?.Payload}</h3> 
+              
+              </Col>
+              </Row>
             </div>
           )}
         <Modal
@@ -1673,8 +1810,17 @@ const Dashboard = () => {
         visible={isModalVisiblePayload}
         onOk={handleOk}
         onCancel={handleCancelPayload}
-        width={800}
+        width={1500}
       >
+        <Input
+        placeholder="Tìm kiếm ký tự trong Payload"
+        value={searchTextHL}
+        onChange={handleSearchHighLight}
+        style={{ marginBottom: '10px' }}
+      />
+      
+      {/* Hiển thị payload với ký tự được bôi đỏ */}
+      <div>{highlightText(modalContent, searchTextHL)}</div>
         <p>{modalContent}</p> {/* Hiển thị dữ liệu payload gốc trong modal */}
         
         <h3>Trích xuất thông tin nhạy cảm</h3>
