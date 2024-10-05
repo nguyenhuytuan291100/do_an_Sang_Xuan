@@ -1055,7 +1055,11 @@ const Dashboard = () => {
                     <Table
                       dataSource={filteredTraffics.map((item: any) => ({
                         ...item,
-                        rowClassName: item.labl === 'Anomaly' ? 'anomaly-row' : '',
+                        rowClassName: item.labl === 'Anomaly'
+                        ? 'anomaly-row'
+                        : item.conference === 0.5
+                        ? 'yellow-row'
+                        : '',
                       }))}
                       columns={columns}
                       rowKey="id"
@@ -1072,7 +1076,11 @@ const Dashboard = () => {
                           cell: ResizableTitle,
                         },
                       }}
-                      rowClassName={(record) => (record.Label === 'Anomaly' ? 'anomaly-row' : '')}
+                      rowClassName={(record) => (record.Label === 'Anomaly'
+                        ? 'anomaly-row'
+                        : record.Conference === 0.5
+                        ? 'yellow-row'
+                        : '')}
                       className="custom-table"
                     />
                   </Modal>
@@ -1575,7 +1583,11 @@ const Dashboard = () => {
                 bordered
                 dataSource={filteredData.map((item: any) => ({
                   ...item,
-                  rowClassName: item.labl === 'Anomaly' ? 'anomaly-row' : '',
+                        rowClassName: item.labl === 'Anomaly'
+                        ? 'anomaly-row'
+                        : item.conference === 0.5
+                        ? 'yellow-row'
+                        : '',
                 }))}
                 columns={columnsWithButton}
                 pagination={{
@@ -1591,7 +1603,11 @@ const Dashboard = () => {
                     cell: ResizableTitle,
                   },
                 }}
-                rowClassName={(record) => (record.Label === 'Anomaly' ? 'anomaly-row' : '')}
+                rowClassName={(record) => (record.Label === 'Anomaly'
+                  ? 'anomaly-row'
+                  : record.Conference === 0.5
+                  ? 'yellow-row'
+                  : '')}
                 className="custom-table"
               />
             </div>
