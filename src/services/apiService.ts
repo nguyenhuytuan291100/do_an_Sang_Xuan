@@ -3,7 +3,7 @@ import axios from 'axios';
 export const apiClient = axios.create({
     // 34.28.18.68
     // baseURL: 'http://35.192.40.83:5001',
-    baseURL: 'http://34.170.214.142:5002',
+    baseURL: 'http://34.121.86.45:5001',
     headers: {
         'Content-Type': 'multipart/form-data',
     },

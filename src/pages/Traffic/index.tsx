@@ -37,7 +37,7 @@ const COLORS = [
 const Dashboard = () => {
   const { id } = useParams();
   const [viewType, setViewType] = useState("Map");
-  const [activeTabKey, setActiveTabKey] = useState("1");
+  const [activeTabKey, setActiveTabKey] = useState("2");
   // M1
   const [tableDatam1, setTableDatam1] = useState([]);
   // State cho tìm kiếm và trường được chọn của M1
@@ -70,13 +70,23 @@ const Dashboard = () => {
 }
   const [netgraph, setNetgraph] = useState<Netgraph[]>([]);
   const nettablecolumns = [
-    { title: 'Source', dataIndex: 'source', key: 'src', width: 150 },
-    { title: 'Target', dataIndex: 'target', key: 'targ', width: 150 },
-    // { title: 'Server', dataIndex: 'nameserver', key: 'srv', width: 150 },
-    { title: 'Label', dataIndex: 'label', key: 'labl', width: 100 },
+    { title: 'Source', dataIndex: 'source', key: 'src', width: 120 },
+    { title: 'Target', dataIndex: 'target', key: 'targ', width: 120 },
+    { title: 'Label', dataIndex: 'label', key: 'labl', width: 80 },
   ]
-  const [nettable, setNettable] = useState([]);
+  
+  interface NetIP {
+    IP: any; // hoặc Date, tùy vào định dạng
+    Count: number; // nếu có thêm id hoặc các thuộc tính khác
+    ConnectedIPs: any;
+    FirstEvent: string;
+    LastEvent: string;
+    [key: string]: any;
+  }
+  const [netIp, setNetIp] = useState<NetIP[]>([]);
   const [netInfo, setNetInfo] = useState<NetTableRecord[]>([]);
+
+  const [nettable, setNettable] = useState([]);
   //M4
   const [totalE, setTotalEM4] = useState([]);
   // M5
@@ -146,13 +156,13 @@ const Dashboard = () => {
   //   { title: 'Destination Port', dataIndex: 'Destination Port', key: 'dstPort', width: 120 },
   //   { title: 'Protocol', dataIndex: 'Protocol', key: 'protocol', width: 100 },
   //   { title: 'Application Protocol', dataIndex: 'Application Protocol', key: 'appProtocol', width: 130 },
-  //   // { title: 'Time Delta', dataIndex: 'Time_Delta', key: 'timeDelta', width: 110 },
-  //   // { title: 'Totlen Pkts', dataIndex: 'Totlen Pkts', key: 'totLenPkts', width: 100 },
-  //   // { title: 'Tot Fwd Pkts', dataIndex: 'Tot Fwd Pkts', key: 'totFwdPkts', width: 100 },
-  //   // { title: 'Tot Bwd Pkts', dataIndex: 'Tot Bwd Pkts', key: 'totBwdPkts', width: 100 },
-  //   // { title: 'TotLen Fwd Pkts', dataIndex: 'TotLen Fwd Pkts', key: 'totLenFwdPkts', width: 100 },
-  //   // { title: 'TotLen Bwd Pkts', dataIndex: 'TotLen Bwd Pkts', key: 'totLenBwdPkts', width: 100 },
-  //   // { title: 'Tot Pkts', dataIndex: 'Tot Pkts', key: 'totPkts', width: 60 },
+  //   { title: 'Time Delta', dataIndex: 'Time_Delta', key: 'timeDelta', width: 110 },
+  //   { title: 'Totlen Pkts', dataIndex: 'Totlen Pkts', key: 'totLenPkts', width: 100 },
+  //   { title: 'Tot Fwd Pkts', dataIndex: 'Tot Fwd Pkts', key: 'totFwdPkts', width: 100 },
+  //   { title: 'Tot Bwd Pkts', dataIndex: 'Tot Bwd Pkts', key: 'totBwdPkts', width: 100 },
+  //   { title: 'TotLen Fwd Pkts', dataIndex: 'TotLen Fwd Pkts', key: 'totLenFwdPkts', width: 100 },
+  //   { title: 'TotLen Bwd Pkts', dataIndex: 'TotLen Bwd Pkts', key: 'totLenBwdPkts', width: 100 },
+  //   { title: 'Tot Pkts', dataIndex: 'Tot Pkts', key: 'totPkts', width: 60 },
   //   { title: 'Label', dataIndex: 'Label', key: 'labl', width: 90 },
   //   { title: 'Confidence Score', dataIndex: 'Conference', key: 'conference', width: 110 },
   // ]);
@@ -221,7 +231,6 @@ const Dashboard = () => {
         sorter: (a: any, b: any) => a['Conference'] - b['Conference'],
     },
 ];
-
    // Hàm xử lý tìm kiếm
   const [selectedValue, setSelectedValue] = useState(null); // State để lưu giá trị đã chọn từ dropdown
   const [uniqueFieldValues, setUniqueFieldValues] = useState([]); // State để lưu các giá trị không trùng lặp của trường đã chọn
@@ -290,15 +299,16 @@ const Dashboard = () => {
   const fetchData = async () => {
     setIsLoading(true);
     const res = await gettrafficById(id)
+    setActiveTabKey('2')
     setTableDatam1(res['m1'])
       // Xử lý dữ liệu mạng
     const networkData = res['m2'];
-    const netgraphData = networkData.netgraph.map((node: any) => ({
+    const netgraphData = networkData?.netgraph?.map((node: any) => ({
       source: node.source,
       target: node.target,
       label: node.label,
     }));
-    const nettableData = networkData.nettable.map((edge: any) => ({
+    const nettableData = networkData?.nettable?.map((edge: any) => ({
       source: edge.source,
       target: edge.target,
       nameserver: edge.nameserver,
@@ -318,9 +328,23 @@ const Dashboard = () => {
       dest_event_counts: Info.dest_event_counts,
       source_event_counts: Info.source_event_counts,
     }));
+    const netIPData = networkData?.netip?.map((IP: any) => ({
+      IP: IP.IP, // hoặc Date, tùy vào định dạng
+      Count: IP.Count, // nếu có thêm id hoặc các thuộc tính khác
+      ConnectedIPs: IP.ConnectedIPs,
+      FirstEvent: IP.FirstEvent,
+      LastEvent: IP.LastEvent,
+    }));
     setNetgraph(netgraphData);
     setNettable(nettableData);
     setNetInfo(netInfoData);
+    setNetIp(netIPData)
+
+
+    console.log(networkData);
+    console.log(netIPData);
+    console.log(netIp);
+    
     // Barchart: uv
     // Linechart: pv
     setTotalEM4(res['m4']);
@@ -619,6 +643,7 @@ const Dashboard = () => {
 
   const showModalPaylaod = (record: TrafficRecord) => {
     const payload = record.Payload; // Lấy payload từ record
+
     // Làm sạch dữ liệu trước khi thêm mới
     setExtractedData([]); // Đảm bảo dữ liệu cũ được xóa trước khi thêm mới
     setSearchTextHL('');
@@ -666,7 +691,9 @@ const Dashboard = () => {
       if (!processedPayload) {
           return; // Dừng lại nếu không có payload
       }
+
       // Biểu thức chính quy để nhận diện dữ liệu nhạy cảm giống như trong file Python
+
       // Regex cho email
       const emailRegex = /(?:\t| |^|<|,|:)([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
       // Regex bước đầu để nhận diện thẻ tín dụng
@@ -883,9 +910,8 @@ const Dashboard = () => {
           Payload
         </Button>
       </Space>
-    ),  
+    ),
   };
-
   const [searchTextHL, setSearchTextHL] = useState('');
   const handleSearchHighLight = (e:any) => {
     setSearchTextHL(e.target.value);
@@ -909,8 +935,6 @@ const Dashboard = () => {
       )
     );
   };
-
-  const columnsWithButton = Array.isArray(columns) ? [...columns, actionColumn] : [actionColumn];
 
   interface NetTableRecord {
     id: number
@@ -936,9 +960,7 @@ const Dashboard = () => {
   const showDestInfo = () => {
       setIsDestInfoVisible(true);
   };
-
-
-  
+  const columnsWithButton = Array.isArray(columns) ? [...columns, actionColumn] : [actionColumn];
   
   return (
     <Spin tip="Loading..." spinning={isLoading} >
@@ -956,9 +978,10 @@ const Dashboard = () => {
               <Col span={16}>
                 <Tabs style={{fontSize:"24px"}} activeKey={activeTabKey} onChange={handleTabChange} centered>
                   <TabPane tab="Overview" key="2" style={{fontSize:"24px"}}/>
+                  <TabPane tab="Network" key="1" style={{fontSize:"24px"}}/>
                   <TabPane tab="Artifacts" key="3" style={{fontSize:"24px"}}/>
                   <TabPane tab="Communications" key="4" style={{fontSize:"24px"}}/>
-                  <TabPane tab="Network" key="1" style={{fontSize:"24px"}}/>
+                  
                 </Tabs>
               </Col>
             )}
@@ -970,7 +993,8 @@ const Dashboard = () => {
                   <Row>
                   <Col span={16}><div >
                   <h1>Network Graph</h1>
-                  <NetGraph data={netgraph} />
+                  {/* <NetGraph data={netgraph} /> */}
+                  <NetGraph data={netgraph} netip={netIp} />
                   </div>
                 </Col><Col span={8}><div >
                   <h1>Network Table</h1>
@@ -1000,7 +1024,7 @@ const Dashboard = () => {
                           <div>
                               <p>Sự Kiện HTTPS bất thường: {detail?.protocol_counts?.HTTPS || 0}</p>
                               <p>Sự Kiện HTTP bất thường: {detail?.protocol_counts?.HTTP || 0}</p>
-                              <p>Sự Kiện cầu SSH bất thường: {detail?.protocol_counts?.SSH || 0}</p>
+                              <p>Sự Kiện SSH bất thường: {detail?.protocol_counts?.SSH || 0}</p>
                               <p>Sự Kiện DNS bất thường: {detail?.protocol_counts?.DNS || 0}</p>
                               <h3>Payloads:</h3>
                               <Table
@@ -1010,8 +1034,8 @@ const Dashboard = () => {
                                   }))}
                                   columns={[
                                       // { title: 'Loại Payload', dataIndex: 'type', key: 'type' },
-                                      { title: 'Chi tiết Payload', dataIndex: 'details', key: 'details' },
-                                      { title: 'Thời gian', dataIndex: 'timestamp', key: 'timestamp' },
+                                      { title: 'Chi tiết Payload', dataIndex: 'details', key: 'details', width:120},
+                                      { title: 'Thời gian', dataIndex: 'timestamp', key: 'timestamp' ,width:60},
                                   ]}
                                   scroll={{x:300,y:300}}
                                   pagination={false}
@@ -1067,7 +1091,6 @@ const Dashboard = () => {
                     pagination={false}
                 />
             </Modal>
-
                   </div>
                 </Col>
                    </Row>
@@ -1186,6 +1209,98 @@ const Dashboard = () => {
                     />
                   </Modal>
                   <Row gutter={[24, 24]} className="chart-row">
+                  <Col span={12}>
+                    <h2>Alert Count</h2>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={barChartDatam23}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis ><Label value="Count" angle={-90} position="insideLeft" /></YAxis>
+                          <RechartsTooltip />
+                          <Legend formatter={() => ''}/>
+                          <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'top' }}>
+                            {barChartDatam23?.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </Col>
+                    <Col span={12}>
+                    <h2>Top Alert Protocols</h2>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart layout="vertical" data={barChartDatam26}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis type="number" /> {/* XAxis trở thành số */}
+                          <YAxis type="category" dataKey="name" width={150}> {/* YAxis là danh mục */}
+                          </YAxis>
+                          <RechartsTooltip />
+                          <Legend formatter={() => 'Totlen Pkts'}/>
+                          <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'right' }}>
+                            {barChartDatam9?.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </Col>
+                  </Row>
+                  <Row gutter={[24, 24]} className="chart-row">
+                    <Col span={12}>
+                    <h2>Top Alert Public Hosts</h2>
+                    <div style={{ marginBottom: '10px' }}>
+                      <Button type={chartBtn.barChart24 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm24Change(barChartDatam24,3)}>Top 3</Button>
+                      <Button type={chartBtn.barChart24 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm24Change(barChartDatam24,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button type={chartBtn.barChart24 === 0 ? 'primary' : 'default'} onClick={() => handleTopXm24Change(barChartDatam24,0)} style={{ marginLeft: 8 }}>All</Button>
+                    </div>
+                    {viewMode24 === 'chart' ? (
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart layout="vertical" data={barChartDatam24TopX.length > 0 ? barChartDatam24TopX : barChartDatam24}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis type="number" /> {/* XAxis trở thành số */}
+                          <YAxis type="category" dataKey="name" width={150}> {/* YAxis là danh mục */}
+                          </YAxis>
+                          <RechartsTooltip />
+                          <Legend formatter={() => ''}/>
+                          <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'right' }}>
+                            {barChartDatam24?.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>):(
+                        <Table dataSource={barChartDatam24} columns={columnsdata24} scroll={{y:200}} pagination={false} style={{ width: '100%', height: '300px' }}/>
+                      )}
+                    </Col>
+                    <Col span={12}>
+                    <h2>Top Alert Private Hosts</h2>
+                    <div style={{ marginBottom: '10px' }}>
+                      <Button type={chartBtn.barChart25 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm25Change(barChartDatam25,3)}>Top 3</Button>
+                      <Button type={chartBtn.barChart25 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm25Change(barChartDatam25,5)} style={{ marginLeft: 8 }}>Top 5</Button>
+                      <Button type={chartBtn.barChart25 === 0 ? 'primary' : 'default'} onClick={() => handleTopXm25Change(barChartDatam25,0)} style={{ marginLeft: 8 }}>All</Button>
+                    </div>
+                    {viewMode25 === 'chart' ? (
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart layout="vertical" data={barChartDatam25TopX.length > 0 ? barChartDatam25TopX : barChartDatam25}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis type="number" /> {/* XAxis trở thành số */}
+                          <YAxis type="category" dataKey="name" width={150}> {/* YAxis là danh mục */}
+                          </YAxis>
+                          <RechartsTooltip />
+                          <Legend formatter={() => ''}/>
+                          <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'right' }}>
+                            {barChartDatam25?.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>):(
+                        <Table dataSource={barChartDatam25} columns={columnsdata24} scroll={{y:300}} pagination={false} style={{ width: '100%', height: '300px' }}/>
+                      )}
+                    </Col>
+                  </Row>
+                  
+                  <Row gutter={[24, 24]} className="chart-row">
                     <Col span={12}>
                       <h2>Total Packet Length Over Time</h2>
                       <ResponsiveContainer width="100%" height={300}>
@@ -1213,97 +1328,7 @@ const Dashboard = () => {
                       </ResponsiveContainer>
                     </Col>
                   </Row>
-                  <Row gutter={[24, 24]} className="chart-row">
-                  <Col span={12}>
-                    <h2>Alert Count</h2>
-                      <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={barChartDatam23}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
-                          <YAxis ><Label value="Count" angle={-90} position="insideLeft" /></YAxis>
-                          <RechartsTooltip />
-                          <Legend formatter={() => ''}/>
-                          <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'top' }}>
-                            {barChartDatam23?.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
-                            ))}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </Col>
-                    <Col span={12}>
-                    <h2>Top Alert-Generating Protocols</h2>
-                      <ResponsiveContainer width="100%" height={300}>
-                        <BarChart layout="vertical" data={barChartDatam26}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis type="number" /> {/* XAxis trở thành số */}
-                          <YAxis type="category" dataKey="name" width={150}> {/* YAxis là danh mục */}
-                          </YAxis>
-                          <RechartsTooltip />
-                          <Legend formatter={() => 'Totlen Pkts'}/>
-                          <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'right' }}>
-                            {barChartDatam9?.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
-                            ))}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </Col>
-                  </Row>
-                  <Row gutter={[24, 24]} className="chart-row">
-                    <Col span={12}>
-                    <h2>Top Alert-Generating Hosts</h2>
-                    <div style={{ marginBottom: '10px' }}>
-                      <Button type={chartBtn.barChart24 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm24Change(barChartDatam24,3)}>Top 3</Button>
-                      <Button type={chartBtn.barChart24 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm24Change(barChartDatam24,5)} style={{ marginLeft: 8 }}>Top 5</Button>
-                      <Button type={chartBtn.barChart24 === 0 ? 'primary' : 'default'} onClick={() => handleTopXm24Change(barChartDatam24,0)} style={{ marginLeft: 8 }}>All</Button>
-                    </div>
-                    {viewMode24 === 'chart' ? (
-                      <ResponsiveContainer width="100%" height={300}>
-                        <BarChart layout="vertical" data={barChartDatam24TopX.length > 0 ? barChartDatam24TopX : barChartDatam24}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis type="number" /> {/* XAxis trở thành số */}
-                          <YAxis type="category" dataKey="name" width={150}> {/* YAxis là danh mục */}
-                          </YAxis>
-                          <RechartsTooltip />
-                          <Legend formatter={() => ''}/>
-                          <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'right' }}>
-                            {barChartDatam24?.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
-                            ))}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>):(
-                        <Table dataSource={barChartDatam24} columns={columnsdata24} scroll={{y:200}} pagination={false} style={{ width: '100%', height: '300px' }}/>
-                      )}
-                    </Col>
-                    <Col span={12}>
-                    <h2>Top Alert-receiving Hosts</h2>
-                    <div style={{ marginBottom: '10px' }}>
-                      <Button type={chartBtn.barChart25 === 3 ? 'primary' : 'default'} onClick={() => handleTopXm25Change(barChartDatam25,3)}>Top 3</Button>
-                      <Button type={chartBtn.barChart25 === 5 ? 'primary' : 'default'} onClick={() => handleTopXm25Change(barChartDatam25,5)} style={{ marginLeft: 8 }}>Top 5</Button>
-                      <Button type={chartBtn.barChart25 === 0 ? 'primary' : 'default'} onClick={() => handleTopXm25Change(barChartDatam25,0)} style={{ marginLeft: 8 }}>All</Button>
-                    </div>
-                    {viewMode25 === 'chart' ? (
-                      <ResponsiveContainer width="100%" height={300}>
-                        <BarChart layout="vertical" data={barChartDatam25TopX.length > 0 ? barChartDatam25TopX : barChartDatam25}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis type="number" /> {/* XAxis trở thành số */}
-                          <YAxis type="category" dataKey="name" width={150}> {/* YAxis là danh mục */}
-                          </YAxis>
-                          <RechartsTooltip />
-                          <Legend formatter={() => ''}/>
-                          <Bar dataKey="uv"  fill="#8884d8" label={{ position: 'right' }}>
-                            {barChartDatam25?.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % 20]} />
-                            ))}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>):(
-                        <Table dataSource={barChartDatam25} columns={columnsdata24} scroll={{y:300}} pagination={false} style={{ width: '100%', height: '300px' }}/>
-                      )}
-                    </Col>
-                  </Row>
+                  
                 </div>
               )}
               {activeTabKey === "3" && (
@@ -1742,8 +1767,8 @@ const Dashboard = () => {
                 <h3>Tot Pkts: {detailFlow?.['Tot Pkts']}</h3> 
             </div>
               </Col>
-              <Col span={16}>
-              <h3 style={{width:'100'}}>Payload: {detailFlow?.Payload}</h3> 
+              <Col span={10}>
+              <h3 >Payload: {detailFlow?.Payload}</h3> 
               
               </Col>
               </Row>
